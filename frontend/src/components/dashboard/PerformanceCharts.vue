@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import AppCard from '../ui/AppCard.vue';
+import PnlLineChart from '../performance/PnlLineChart.vue';
 </script>
 
 <template>
   <AppCard class="charts">
-    <h3>Rendimiento (P&L)</h3>
-    <p class="text-muted">Cargando gráfico...</p>
+    <h3>Historial de P&L</h3>
+    <PnlLineChart :data="[10, 25, 45, 120, 310, 450]" />
   </AppCard>
 </template>
 

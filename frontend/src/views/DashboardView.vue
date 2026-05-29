@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useDashboardSocket } from '../composables/useDashboardSocket';
+import { getDashboardSummary, getExchanges } from '../services/dashboard.service';
+import { useMarketStore } from '../stores/market.store';
 import KpiCard from '../components/dashboard/KpiCard.vue';
 import ExchangeCard from '../components/dashboard/ExchangeCard.vue';
 import OpportunityTable from '../components/dashboard/OpportunityTable.vue';
@@ -10,27 +12,85 @@ import PerformanceCharts from '../components/dashboard/PerformanceCharts.vue';
 import SystemLogPanel from '../components/dashboard/SystemLogPanel.vue';
 
 const { connect } = useDashboardSocket();
+const marketStore = useMarketStore();
+const summary = ref({
+  global_pnl: 0,
+  global_win_rate: 0,
+  trades_count: 0,
+  opportunities_count: 0,
+  average_cost: 0
+});
 
-onMounted(() => {
-  // Iniciar la conexión de WebSockets al cargar el Dashboard
+onMounted(async () => {
   connect();
+  try {
+    const data = await getDashboardSummary();
+    // Manejar si viene en data.results, o como un arreglo directo, o como un objeto
+    let result = data.results ? data.results : data;
+    if (Array.isArray(result) && result.length > 0) result = result[0];
+    
+    if (result) {
+      summary.value = {
+        global_pnl: parseFloat(result.total_pnl_usd) || 0,
+        global_win_rate: parseFloat(result.win_rate_percent) || 0,
+        trades_count: result.total_trades || 0,
+        opportunities_count: (result.total_trades || 0) + (result.discarded_opportunities || 0),
+        average_cost: parseFloat(result.total_fees_usd) || 0
+      };
+    }
+  } catch (error) {
+    console.error('Error loading dashboard summary', error);
+  }
+
+  try {
+    const exData = await getExchanges();
+    const exchanges = exData.results || exData;
+    if (Array.isArray(exchanges)) {
+      exchanges.forEach((ex: any) => {
+        marketStore.upsertSnapshot({
+          exchange: ex.name ? ex.name.toLowerCase() : ex.exchange,
+          pair: ex.pair || 'BTC/USDT',
+          bid: ex.last_bid || ex.bid || 0,
+          ask: ex.last_ask || ex.ask || 0,
+          timestamp: new Date().toISOString()
+        });
+      });
+    }
+  } catch (error) {
+    console.error('Error loading exchanges:', error);
+  }
 });
 </script>
 
 <template>
   <div class="dashboard-grid">
     <!-- Fila 1: KPIs (6 cards x 2 columnas = 12 cols) -->
-    <KpiCard class="col-span-2" title="P&L Total" value="0.00" prefix="$" />
-    <KpiCard class="col-span-2" title="Win Rate" value="0.00" suffix="%" />
-    <KpiCard class="col-span-2" title="Ops Ejecutadas" value="0" />
-    <KpiCard class="col-span-2" title="Oportunidades" value="0" />
-    <KpiCard class="col-span-2" title="Costo Promedio" value="0.00" prefix="$" />
-    <KpiCard class="col-span-2" title="Ganancia Neta" value="0.00" prefix="$" />
+    <KpiCard class="col-span-2" title="P&L Total" :value="summary.global_pnl" prefix="$" />
+    <KpiCard class="col-span-2" title="Win Rate" :value="summary.global_win_rate" suffix="%" />
+    <KpiCard class="col-span-2" title="Ops Ejecutadas" :value="summary.trades_count" />
+    <KpiCard class="col-span-2" title="Oportunidades" :value="summary.opportunities_count" />
+    <KpiCard class="col-span-2" title="Costo Promedio" :value="summary.average_cost" prefix="$" />
+    <KpiCard class="col-span-2" title="Ganancia Neta" :value="summary.global_pnl" prefix="$" />
 
     <!-- Fila 2: Exchanges (3 cards x 4 columnas = 12 cols) -->
-    <ExchangeCard class="col-span-4" exchangeName="Binance" :connected="false" />
-    <ExchangeCard class="col-span-4" exchangeName="Kraken" :connected="false" />
-    <ExchangeCard class="col-span-4" exchangeName="Bitfinex" :connected="false" />
+    <ExchangeCard 
+      class="col-span-4" 
+      exchangeName="Binance" 
+      :connected="Object.keys(marketStore.snapshots).some(k => k.includes('binance'))" 
+      :marketData="Object.values(marketStore.snapshots).find(m => m.exchange === 'binance')" 
+    />
+    <ExchangeCard 
+      class="col-span-4" 
+      exchangeName="Kraken" 
+      :connected="Object.keys(marketStore.snapshots).some(k => k.includes('kraken'))" 
+      :marketData="Object.values(marketStore.snapshots).find(m => m.exchange === 'kraken')" 
+    />
+    <ExchangeCard 
+      class="col-span-4" 
+      exchangeName="Bitfinex" 
+      :connected="Object.keys(marketStore.snapshots).some(k => k.includes('bitfinex'))" 
+      :marketData="Object.values(marketStore.snapshots).find(m => m.exchange === 'bitfinex')" 
+    />
 
     <!-- Fila 3: Oportunidades y Ejecución -->
     <OpportunityTable class="col-span-7" />

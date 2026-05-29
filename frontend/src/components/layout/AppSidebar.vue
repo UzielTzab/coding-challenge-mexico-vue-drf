@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
+import { useBotStore } from '../../stores/bot.store';
 
 const route = useRoute();
+const botStore = useBotStore();
 
 const links = [
   { name: 'Dashboard', path: '/', icon: 'dashboard' },
@@ -41,8 +43,8 @@ const links = [
         <span class="text-sm">Modo: Simulación</span>
       </div>
       <div class="footer-status">
-        <span class="status-dot"></span>
-        <span class="text-sm">Bot: Detenido</span>
+        <span class="status-dot" :style="{ background: botStore.status === 'running' ? 'var(--color-success)' : 'var(--color-danger)' }"></span>
+        <span class="text-sm">Bot: {{ botStore.status === 'running' ? 'Activo' : 'Detenido' }}</span>
       </div>
       <div class="footer-version">v1.0.0</div>
     </div>

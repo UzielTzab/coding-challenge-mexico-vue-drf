@@ -1,6 +1,6 @@
 import api from './http';
 
-export const getTrades = async (params: Record<string, any> = {}) => {
-  const { data } = await api.get('/api/trading/simulated-trades/', { params });
+export const getTrades = async (params?: any) => {
+  const { data } = await api.get('/api/trades/simulated-trades/', { params });
   return data;
 };

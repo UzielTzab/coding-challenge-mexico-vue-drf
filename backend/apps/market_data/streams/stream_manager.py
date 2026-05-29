@@ -56,6 +56,28 @@ class StreamManager:
         from apps.arbitrage.engine.arbitrage_engine import ArbitrageEngine
         ArbitrageEngine.process_snapshot(snapshot)
 
+        # Emit WebSocket Event
+        from asgiref.sync import async_to_sync
+        from channels.layers import get_channel_layer
+        channel_layer = get_channel_layer()
+        if channel_layer:
+            async_to_sync(channel_layer.group_send)(
+                "dashboard_updates",
+                {
+                    "type": "dashboard_message",
+                    "payload": {
+                        "type": "market_update",
+                        "exchange": exchange.code,
+                        "symbol": snapshot.symbol,
+                        "best_bid": str(snapshot.best_bid),
+                        "best_ask": str(snapshot.best_ask),
+                        "bid_volume": str(snapshot.bid_volume),
+                        "ask_volume": str(snapshot.ask_volume),
+                        "latency_ms": snapshot.latency_ms
+                    }
+                }
+            )
+
     async def handle_message(self, normalized_data: Dict[str, Any], raw_message: Dict[str, Any] = None):
         exchange_code = normalized_data.get("exchange_code")
         exchange = await self.get_exchange(exchange_code)

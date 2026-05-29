@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
+import { getSettings, updateSettings } from '../../services/settings.service';
+import { useBotStore } from '../../stores/bot.store';
 
 const route = useRoute();
+const botStore = useBotStore();
+const settingId = ref<string | null>(null);
+const backendStatus = ref(true);
+const wsStatus = ref(true); // Se asume verdadero al inicio si no hay fallos en consola
 
 const pageTitle = computed(() => {
   const map: Record<string, string> = {
@@ -17,6 +23,38 @@ const pageTitle = computed(() => {
   };
   return map[route.path] || 'Dashboard';
 });
+
+const loadSettings = async () => {
+  try {
+    const data = await getSettings();
+    const results = data.results || data;
+    if (results && results.length > 0) {
+      settingId.value = results[0].id;
+      botStore.setStatus(results[0].is_running ? 'running' : 'stopped');
+      backendStatus.value = true;
+    }
+  } catch (error) {
+    console.error('Error fetching settings for bot toggle', error);
+    backendStatus.value = false;
+    wsStatus.value = false;
+  }
+};
+
+const toggleBot = async (state: boolean) => {
+  if (!settingId.value) return;
+  try {
+    await updateSettings(settingId.value, { is_running: state });
+    botStore.setStatus(state ? 'running' : 'stopped');
+    backendStatus.value = true;
+  } catch (error) {
+    console.error('Error toggling bot', error);
+    backendStatus.value = false;
+  }
+};
+
+onMounted(() => {
+  loadSettings();
+});
 </script>
 
 <template>
@@ -28,18 +66,18 @@ const pageTitle = computed(() => {
     <div class="header-actions">
       <div class="status-indicators">
         <div class="status">
-          <span class="status-dot status-dot--success"></span>
-          <span class="text-sm text-muted">Backend OK</span>
+          <span class="status-dot" :class="backendStatus ? 'status-dot--success' : 'status-dot--danger'"></span>
+          <span class="text-sm text-muted">Backend {{ backendStatus ? 'OK' : 'Error' }}</span>
         </div>
         <div class="status">
-          <span class="status-dot status-dot--success"></span>
-          <span class="text-sm text-muted">WS OK</span>
+          <span class="status-dot" :class="wsStatus ? 'status-dot--success' : 'status-dot--danger'"></span>
+          <span class="text-sm text-muted">WS {{ wsStatus ? 'OK' : 'Error' }}</span>
         </div>
       </div>
       
       <div class="action-buttons">
-        <button class="btn-dark">Iniciar Bot</button>
-        <button class="btn-text">Pausar</button>
+        <button v-if="botStore.status !== 'running'" class="btn-dark" @click="toggleBot(true)">Iniciar Bot</button>
+        <button v-else class="btn-dark" style="background-color: var(--color-danger)" @click="toggleBot(false)">Pausar Bot</button>
       </div>
 
       <div class="profile-section">

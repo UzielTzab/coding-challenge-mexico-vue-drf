@@ -1,33 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import AppCard from '../ui/AppCard.vue';
-import AppTable from '../ui/AppTable.vue';
-import AppBadge from '../ui/AppBadge.vue';
-import AppButton from '../ui/AppButton.vue';
-import { useOpportunitiesStore } from '../../stores/opportunities.store';
+import { getOpportunities } from '../../services/opportunities.service';
 import { useFormatters } from '../../composables/useFormatters';
 
-
-const store = useOpportunitiesStore();
+const opportunities = ref<any[]>([]);
 const { formatUSD, formatPercent } = useFormatters();
 
-const columns = [
-  { key: 'buy_exchange', label: 'Comprar en' },
-  { key: 'sell_exchange', label: 'Vender en' },
-  { key: 'profit_usd', label: 'Profit USD', align: 'right' as const },
-  { key: 'profit_percent', label: 'Profit %', align: 'right' as const },
-  { key: 'status', label: 'Estado', align: 'center' as const },
-  { key: 'actions', label: 'Acción', align: 'center' as const }
-];
-
-const data = computed(() => store.items.slice(0, 10)); // Mostrar top 10
-
-const getBadgeVariant = (status: string) => {
-  if (status === 'rentable') return 'success';
-  if (status === 'descartada') return 'danger';
-  if (status === 'ejecutada') return 'info';
-  return 'neutral';
-};
+onMounted(async () => {
+  try {
+    const data = await getOpportunities();
+    const results = data.results || data;
+    opportunities.value = Array.isArray(results) ? results.slice(0, 5) : []; // show top 5
+  } catch (error) {
+    console.error('Error fetching opportunities:', error);
+  }
+});
 </script>
 
 <template>
@@ -35,20 +23,33 @@ const getBadgeVariant = (status: string) => {
     <div class="opp-header">
       <h3>Oportunidades en Tiempo Real</h3>
     </div>
-    <AppTable :columns="columns" :data="data">
-      <template #profit_usd="{ item }">
-        <span class="numeric text-success">+{{ formatUSD(item.profit_usd) }}</span>
-      </template>
-      <template #profit_percent="{ item }">
-        <span class="numeric text-success">{{ formatPercent(item.profit_percent) }}</span>
-      </template>
-      <template #status="{ item }">
-        <AppBadge :variant="getBadgeVariant(item.status)">{{ item.status }}</AppBadge>
-      </template>
-      <template #actions="{ item }">
-        <AppButton variant="secondary" @click="$emit('view', item)">Ver</AppButton>
-      </template>
-    </AppTable>
+    <div class="table-container">
+      <table class="opps-table">
+        <thead>
+          <tr>
+            <th>Par</th>
+            <th>Buy</th>
+            <th>Sell</th>
+            <th>Spread</th>
+            <th>Profit Neto</th>
+          </tr>
+        </thead>
+        <tbody v-if="opportunities.length > 0">
+          <tr v-for="opp in opportunities" :key="opp.id">
+            <td>{{ opp.symbol }}</td>
+            <td>{{ opp.buy_exchange }}</td>
+            <td>{{ opp.sell_exchange }}</td>
+            <td class="text-success">{{ formatPercent(opp.spread_percent || 0) }}</td>
+            <td class="text-success">{{ formatUSD(opp.net_profit || 0) }}</td>
+          </tr>
+        </tbody>
+        <tbody v-else>
+          <tr>
+            <td colspan="5" class="empty-state">No hay oportunidades recientes</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </AppCard>
 </template>
 
@@ -56,4 +57,9 @@ const getBadgeVariant = (status: string) => {
 .opp-card { display: flex; flex-direction: column; height: 100%; background-color: var(--color-bg-base); }
 .opp-header { margin-bottom: 16px; }
 .opp-header h3 { margin: 0; font-size: 16px; }
+.table-container { overflow-x: auto; }
+.opps-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.opps-table th { text-align: left; padding: 12px 8px; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border); font-weight: 500; }
+.opps-table td { padding: 12px 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+.empty-state { text-align: center; padding: 40px; color: var(--color-text-muted); font-size: 14px; }
 </style>

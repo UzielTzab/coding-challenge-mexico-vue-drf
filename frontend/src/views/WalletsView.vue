@@ -3,30 +3,30 @@ import { ref, onMounted } from 'vue';
 import AppCard from '../components/ui/AppCard.vue';
 import WalletCard from '../components/wallets/WalletCard.vue';
 import WalletMovementTable from '../components/wallets/WalletMovementTable.vue';
-// import { getWallets } from '../services/wallets.service'; // Si tuvieramos este endpoint
+import { getWallets } from '../services/wallets.service';
 
 const isLoading = ref(false);
 
-const wallets = ref([
-  {
-    exchange: 'binance',
-    totalUsdValue: 15430.50,
-    balances: { 'USDT': 10000, 'BTC': 0.15, 'ETH': 2.5 } as Record<string, number>
-  },
-  {
-    exchange: 'kraken',
-    totalUsdValue: 12100.20,
-    balances: { 'USD': 5000, 'BTC': 0.12, 'ETH': 3.1 } as Record<string, number>
-  }
-]);
+const wallets = ref<any[]>([]);
+const movements = ref<any[]>([]);
 
-const movements = ref([
-  { id: 1, timestamp: new Date().toISOString(), exchange: 'binance', asset: 'USDT', type: 'deposit', amount: 5000, status: 'Completado' },
-  { id: 2, timestamp: new Date(Date.now() - 86400000).toISOString(), exchange: 'kraken', asset: 'BTC', type: 'withdraw', amount: 0.05, status: 'Completado' }
-]);
+const loadData = async () => {
+  isLoading.value = true;
+  try {
+    const data = await getWallets();
+    // Assuming backend returns { results: [...] } or an array
+    const results = data.results || data;
+    wallets.value = results.wallets || [];
+    movements.value = results.movements || [];
+  } catch (error) {
+    console.error('Error fetching wallets:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 onMounted(() => {
-  // loadData();
+  loadData();
 });
 </script>
 

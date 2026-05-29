@@ -4,7 +4,8 @@ import AppCard from '../components/ui/AppCard.vue';
 import LogFilterTabs from '../components/logs/LogFilterTabs.vue';
 import ServiceStatusCard from '../components/logs/ServiceStatusCard.vue';
 import { useLogsStore } from '../stores/logs.store';
-import { computed } from 'vue';
+import { getLogs } from '../services/logs.service';
+import { computed, onMounted } from 'vue';
 
 const store = useLogsStore();
 const activeTab = ref('all');
@@ -21,6 +22,21 @@ const services = [
   { name: 'Binance API', status: 'ok' as const, latency: 110 },
   { name: 'Kraken API', status: 'degraded' as const, latency: 850 }
 ];
+
+const loadLogs = async () => {
+  try {
+    const data = await getLogs();
+    const items = data.results || data;
+    // Assuming store has a way to set all items or we just map them over
+    store.items = items;
+  } catch (error) {
+    console.error('Error fetching logs:', error);
+  }
+};
+
+onMounted(() => {
+  loadLogs();
+});
 </script>
 
 <template>
