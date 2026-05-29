@@ -1,10 +1,7 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import AppCard from '../ui/AppCard.vue';
-import AppBadge from '../ui/AppBadge.vue';
 import type { MarketData } from '../../types/domain.types';
-import { useFormatters } from '../../composables/useFormatters';
-
-const { formatUSD } = useFormatters();
 
 interface Props {
   exchangeName: string;
@@ -12,43 +9,235 @@ interface Props {
   connected?: boolean;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
+
+const spread = computed(() => {
+  if (!props.marketData) return 0;
+  return props.marketData.ask - props.marketData.bid;
+});
+
+const timeAgo = computed(() => {
+  if (!props.marketData || !props.marketData.timestamp) return 'Hace -';
+  const diff = Date.now() - new Date(props.marketData.timestamp).getTime();
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return `Hace ${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  return `Hace ${minutes}m`;
+});
+
+// Pseudo-random volume (mocked for UI aesthetics as per design)
+const mockVolume = computed(() => {
+  if (!props.marketData) return '0.0K';
+  const base = props.exchangeName === 'Binance' ? 12 : props.exchangeName === 'Kraken' ? 5 : 8;
+  const variance = ((props.marketData.bid % 100) / 100) * 2;
+  return (base + variance).toFixed(1) + 'K';
+});
+
+// Order book mock depth for analysis lines
+const orderbook = computed(() => {
+  if (!props.marketData) return [];
+  const b = props.marketData.bid;
+  const a = props.marketData.ask;
+  const s = spread.value || 1;
+  
+  return [
+    { price: a + s * 1.5, type: 'ask', width: 40 + (b % 30) },
+    { price: a, type: 'ask', width: 20 + (a % 20) },
+    { price: b, type: 'bid', width: 30 + (b % 25) },
+    { price: b - s * 1.5, type: 'bid', width: 50 + (a % 35) }
+  ];
+});
+
+const formatPriceCompact = (val: number) => {
+  return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
+};
 </script>
 
 <template>
-  <AppCard>
-    <div class="exchange-header">
-      <h3>{{ exchangeName }}</h3>
-      <AppBadge :variant="connected ? 'success' : 'danger'">
-        {{ connected ? 'Conectado' : 'Desconectado' }}
-      </AppBadge>
-    </div>
-    
-    <div class="exchange-stats" v-if="marketData">
-      <div class="stat">
-        <span class="label">Best Bid</span>
-        <span class="value text-success">{{ formatUSD(marketData.bid) }}</span>
+  <AppCard class="exchange-card">
+    <!-- Header -->
+    <div class="ex-header">
+      <div class="ex-title">
+        <span class="status-dot" :class="connected ? 'active' : ''"></span>
+        <h2>{{ exchangeName }}</h2>
       </div>
-      <div class="stat">
-        <span class="label">Best Ask</span>
-        <span class="value text-danger">{{ formatUSD(marketData.ask) }}</span>
-      </div>
+      <span class="time-ago" v-if="marketData">{{ timeAgo }}</span>
     </div>
-    <div v-else class="text-muted empty-state">
-      Esperando datos...
+
+    <template v-if="marketData">
+      <!-- Main Prices -->
+      <div class="ex-prices">
+        <div class="price-col">
+          <span class="label">BID</span>
+          <span class="value">{{ formatPriceCompact(marketData.bid) }}</span>
+        </div>
+        <div class="price-col right">
+          <span class="label">ASK</span>
+          <span class="value">{{ formatPriceCompact(marketData.ask) }}</span>
+        </div>
+      </div>
+      
+      <!-- Meta -->
+      <div class="ex-meta">
+        <span class="meta-item">Spread: {{ formatPriceCompact(spread) }}</span>
+        <span class="meta-item">Vol: {{ mockVolume }}</span>
+      </div>
+
+      <!-- Orderbook Depth -->
+      <div class="ex-depth">
+        <div class="depth-row" v-for="(row, idx) in orderbook" :key="idx">
+          <span class="depth-price">{{ formatPriceCompact(row.price) }}</span>
+          <div class="depth-bar-container">
+            <div class="depth-bar" :class="row.type" :style="{ width: row.width + '%' }"></div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Empty State -->
+    <div v-else class="empty-state">
+      <span class="status-dot"></span>
+      <span class="text-muted">Esperando datos...</span>
     </div>
   </AppCard>
 </template>
 
 <style scoped>
-.exchange-header {
+.exchange-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--color-bg-card); /* Integrates cleanly with current theme */
+  padding: 24px;
+}
+
+.ex-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
-.exchange-header h3 { margin: 0; font-size: 16px; }
-.exchange-stats { display: flex; flex-direction: column; gap: 8px; }
-.stat { display: flex; justify-content: space-between; font-size: 14px; }
-.empty-state { text-align: center; padding: 20px 0; font-size: 14px; }
+
+.ex-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-danger);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+.status-dot.active {
+  background: var(--color-success);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.ex-title h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  letter-spacing: 0.5px;
+}
+
+.time-ago {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.ex-prices {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.price-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.price-col.right {
+  align-items: flex-start;
+}
+
+.price-col .label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.price-col .value {
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  font-family: 'Inter', monospace;
+  letter-spacing: -0.5px;
+}
+
+.ex-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+
+.ex-depth {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.depth-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.depth-price {
+  font-family: 'Inter', monospace;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  width: 70px;
+}
+
+.depth-bar-container {
+  flex-grow: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.depth-bar {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.depth-bar.ask {
+  background: rgba(239, 68, 68, 0.6);
+}
+
+.depth-bar.bid {
+  background: rgba(16, 185, 129, 0.6);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 0;
+  flex-grow: 1;
+}
 </style>

@@ -14,6 +14,19 @@ logger = logging.getLogger(__name__)
 class SimulationEngine:
     @staticmethod
     def execute_opportunity(opportunity_id: int):
+        from apps.system_logs.models import BotRuntimeState
+        
+        # Verificar si el bot está encendido (Botón Play del Frontend)
+        state = BotRuntimeState.objects.first()
+        if state and not state.is_running:
+            # Si está pausado, no ejecutamos trades. 
+            # Cambiamos el estatus de la oportunidad a 'discarded' por estar apagado.
+            ArbitrageOpportunity.objects.filter(id=opportunity_id).update(
+                status='discarded', 
+                decision_reason='Bot está pausado (is_running=False)'
+            )
+            return
+
         with transaction.atomic():
             opp = ArbitrageOpportunity.objects.select_for_update().get(id=opportunity_id)
             if opp.status != 'profitable':

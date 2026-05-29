@@ -78,6 +78,8 @@ class StreamManager:
                 }
             )
 
+        print(f"[{exchange.code}] {snapshot.symbol} | Ask: {snapshot.best_ask} | Bid: {snapshot.best_bid} | Vol: {snapshot.ask_volume}/{snapshot.bid_volume}")
+
     async def handle_message(self, normalized_data: Dict[str, Any], raw_message: Dict[str, Any] = None):
         exchange_code = normalized_data.get("exchange_code")
         exchange = await self.get_exchange(exchange_code)
