@@ -84,6 +84,11 @@ class ArbitrageEngine:
             # 5. Emit Event via Channels
             ArbitrageEngine.emit_event(opp)
 
+            # 6. Execute Simulation if Profitable
+            if is_profitable:
+                from apps.trading.engine.simulation_engine import SimulationEngine
+                SimulationEngine.execute_opportunity(opp.id)
+
     @staticmethod
     def emit_event(opp: ArbitrageOpportunity):
         channel_layer = get_channel_layer()
