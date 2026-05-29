@@ -1,155 +1,396 @@
-# Especificación de Arquitectura y Modelos de Datos del Backend
+# BACKEND_MODELS_GUIDE.md
 
-Este documento establece la arquitectura técnica, las entidades de dominio y los contratos de API requeridos para el motor de arbitraje **ArbiBTC**. El diseño está orientado a construir un sistema robusto, escalable y auditable.
+# Modelos oficiales backend — ArbiBTC
 
-## 1. Objetivos del Sistema
-
-La arquitectura del backend está diseñada para orquestar las siguientes capacidades principales:
-- Establecer y mantener conexiones estables (WebSockets) con exchanges de criptomonedas.
-- Estandarizar y agregar datos de mercado (Order Books, Tickers) en tiempo real.
-- Identificar y validar oportunidades de arbitraje sensibles a la latencia.
-- Computar la rentabilidad neta incorporando costos operativos realistas (comisiones de trading, comisiones de red/retiro, slippage dinámico y penalizaciones por latencia).
-- Simular secuencias de ejecución de operaciones (Trades).
-- Persistir el estado de las billeteras simuladas (Wallets) y el libro mayor de movimientos (Ledger).
-- Exponer el estado del sistema mediante una API RESTful y emitir eventos en tiempo real vía WebSockets.
-- Mantener un registro exhaustivo de auditoría técnica y métricas de rendimiento.
-
-## 2. Stack Tecnológico Base
-
-- **Framework:** Django + Django REST Framework (DRF)
-- **Capa de Tiempo Real:** Django Channels (WebSockets, ASGI)
-- **Base de Datos:** PostgreSQL
-
-## 3. Arquitectura de Aplicaciones
-
-El sistema se divide en los siguientes dominios de negocio discretos:
-
-- `exchanges`: Directorio de exchanges, estructuras de comisiones y estados de conectividad.
-- `market_data`: Datos de Nivel 1 (Mejor Bid/Ask) y Nivel 2 (Snapshots de Order Book).
-- `opportunities`: Algoritmos de detección de anomalías de spread y decisiones del motor.
-- `trades`: Órdenes de ejecución simuladas y sus tramos (compra/venta).
-- `wallets`: Saldos simulados y transacciones inmutables.
-- `analytics`: Pipelines de agregación para métricas de rendimiento y P&L.
-- `system_logs`: Trazabilidad y auditoría a nivel de dominio.
-- `bot_config`: Parámetros operativos y límites de riesgo del sistema.
+Este documento define los modelos que el backend implementará en Django. Los modelos están diseñados para cubrir dashboard, oportunidades, operaciones, wallets, rendimiento, logs y configuración del bot.
 
 ---
 
-## 4. Especificación de Entidades Core (Modelos)
+## 1. Apps oficiales
 
-### 4.1 Exchange
-Representa un mercado de intercambio conectado al sistema.
-- **Atributos:** Nombre, Código Único, Estado de Conexión, URLs (WebSocket/REST), Comisión de Trading (%), Comisión de Retiro, Latencia (ms), Último Timestamp de Conexión.
-- **Estados de Conexión:** Online, Offline, Reconnecting, Error.
-
-### 4.2 Par de Trading (Trading Pair)
-Define el activo monitoreado por el motor.
-- **Atributos:** Activo Base (ej. BTC), Activo Cotizado (ej. USDT), Símbolo, Estado Activo.
-
-### 4.3 Ticker de Mercado (Market Ticker)
-Captura la cima del libro de órdenes (datos L1).
-- **Atributos:** Mejor Precio/Cantidad de Compra (Bid), Mejor Precio/Cantidad de Venta (Ask), Spread Bruto (%), Volumen 24h, Timestamp.
-- *Nota de Implementación:* Se requiere indexación eficiente sobre el timestamp y símbolo para mitigar la degradación de consultas sobre series temporales.
-
-### 4.4 Snapshot del Libro de Órdenes (Order Book)
-Captura la profundidad del mercado (datos L2) para validar liquidez y modelar slippage.
-- **Atributos:** Matriz de Bids (precio/cantidad), Matriz de Asks (precio/cantidad), Nivel de Profundidad, Timestamp.
+```txt
+backend/apps/
+├── exchanges/
+├── market_data/
+├── arbitrage/
+├── trading/
+├── wallets/
+├── analytics/
+├── system_logs/
+└── bot_config/
+```
 
 ---
 
-## 5. Motor de Arbitraje
+## 2. Exchange
 
-### 5.1 Oportunidad (Opportunity)
-Registra una anomalía de spread detectada y el cómputo de la decisión del sistema.
-- **Atributos:** Referencias a Exchanges (Compra/Venta), Par Objetivo, Precios Ask/Bid, Volumen Disponible, Spread Bruto (USD/%), Desglose de Costos (Comisiones, Slippage, Latencia), Beneficio Neto Estimado (USD/%), Score de Liquidez, Razón de la Decisión.
-- **Ciclo de Vida (Estados):** Detectada, Rentable, Descartada, Ejecutada, Fallida.
+App:
 
-### 5.2 Operación Simulada (Simulated Trade)
-Representa el resultado consolidado de la ejecución de un arbitraje.
-- **Atributos:** Oportunidad Asociada, Exchanges Involucrados, Cantidad Solicitada/Ejecutada, Precios de Ejecución Ponderados, Beneficio Bruto, Total de Comisiones, Beneficio Neto Consolidado, Mensaje de Resultado.
-- **Estados:** Ejecutada, Parcialmente Ejecutada, Fallida, Descartada.
+```txt
+exchanges
+```
 
-### 5.3 Tramo de Operación (Trade Leg)
-Detalla la acción individual (compra o venta) dentro de una operación consolidada.
-- **Atributos:** Lado (Buy/Sell), Activo, Cantidad, Precio de Ejecución, Valor Nocional (USD), Comisión Aplicada, Estado de Ejecución.
+Modelo:
 
----
+```txt
+Exchange
+```
 
-## 6. Libro Mayor Financiero (Wallets)
+Campos:
 
-### 6.1 Billetera (Wallet)
-Mantiene el estado consolidado de los activos en un exchange específico.
-- **Atributos:** Activo Base Disponible/Bloqueado, Activo Cotizado Disponible/Bloqueado, Valoración Total en USD.
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `id` | UUID | Identificador. |
+| `name` | CharField | Nombre visible. |
+| `code` | CharField unique | Código interno: `binance`, `kraken`, `coinbase`. |
+| `base_url` | URLField | API REST pública. |
+| `websocket_url` | URLField | WebSocket público. |
+| `trading_fee_percent` | DecimalField | Fee de trading. |
+| `withdrawal_fee_btc` | DecimalField | Fee estimado de retiro BTC. |
+| `is_active` | BooleanField | Habilita o deshabilita exchange. |
+| `created_at` | DateTimeField | Creación. |
+| `updated_at` | DateTimeField | Actualización. |
 
-### 6.2 Movimiento de Billetera (Wallet Movement)
-Registro inmutable de cualquier mutación de saldo.
-- **Atributos:** Tipo de Movimiento (Compra, Venta, Comisión, Bloqueo, Liberación, Ajuste), Activo, Cantidad, Saldo Anterior, Saldo Posterior, Referencia a Operación/Log.
+Relaciones:
 
----
-
-## 7. Observabilidad y Rendimiento
-
-### 7.1 Snapshot de Rendimiento (Performance Snapshot)
-Métricas agregadas para la visualización del dashboard.
-- **Atributos:** P&L Total (USD), Recuento de Operaciones (Total, Rentables, Fallidas), Oportunidades Descartadas, Tasa de Éxito (Win Rate %), Tiempo Promedio de Ejecución, Comisiones Acumuladas.
-
-### 7.2 Log del Sistema (System Log)
-Rastro de auditoría técnica.
-- **Atributos:** Nivel de Severidad (Info, Warn, Error, Success), Módulo Origen, Mensaje, Contexto JSON.
+- Un exchange tiene muchos market snapshots.
+- Un exchange puede ser origen de compra en oportunidades.
+- Un exchange puede ser destino de venta en oportunidades.
+- Un exchange tiene una wallet simulada.
 
 ---
 
-## 8. Configuración del Sistema
+## 3. MarketSnapshot
 
-### 8.1 Configuración del Motor (Bot Configuration)
-Parámetros globales que dictan el comportamiento y gestión de riesgos del algoritmo.
-- **Atributos:** Umbral Mínimo de Beneficio (%), Tamaño Máximo de Operación, Volumen Mínimo Requerido, Modelo de Slippage (Fijo vs. Dinámico), Interruptores de Circuito (Circuit Breakers), Límite Máximo de Pérdida Diaria.
+App:
+
+```txt
+market_data
+```
+
+Modelo:
+
+```txt
+MarketSnapshot
+```
+
+Campos:
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `id` | UUID | Identificador. |
+| `exchange` | ForeignKey | Exchange origen. |
+| `symbol` | CharField | Par normalizado, por ejemplo `BTC/USDT`. |
+| `best_bid` | DecimalField | Mejor precio comprador. |
+| `best_ask` | DecimalField | Mejor precio vendedor. |
+| `bid_volume` | DecimalField | Volumen disponible en bid. |
+| `ask_volume` | DecimalField | Volumen disponible en ask. |
+| `spread` | DecimalField | Spread interno del exchange. |
+| `latency_ms` | PositiveIntegerField | Latencia medida. |
+| `raw_payload` | JSONField | Payload original resumido. |
+| `received_at` | DateTimeField | Momento de recepción. |
+| `created_at` | DateTimeField | Momento de persistencia. |
+
+Índices:
+
+- `exchange`, `symbol`, `received_at`.
+- `symbol`, `received_at`.
+
+Uso:
+
+- Dashboard de mercados.
+- Detección de oportunidades.
+- Cálculo de latencia.
 
 ---
 
-## 9. Contratos de API REST y Eventos de Tiempo Real
+## 4. ArbitrageOpportunity
 
-### 9.1 Documentación Interactiva (Swagger / OpenAPI)
-- **Esquema OpenAPI:** `/api/schema/`
-- **Swagger UI:** `/api/docs/swagger/`
-- **Redoc UI:** `/api/docs/redoc/`
+App:
 
-### 9.2 Endpoints REST Principales
-- **Mercados:** `/api/markets/tickers/`, `/api/exchanges/`
-- **Oportunidades:** `/api/opportunities/`, `/api/opportunities/summary/`, `/api/opportunities/{id}/simulate/`
-- **Operaciones:** `/api/trades/`, `/api/trades/summary/`
-- **Finanzas:** `/api/wallets/`, `/api/wallets/summary/`, `/api/wallet-movements/`
-- **Rendimiento:** `/api/analytics/pnl/`, `/api/analytics/summary/`
-- **Plano de Control:** `/api/bot-config/active/`, `/api/bot-control/start/`, `/api/bot-control/pause/`
-- **Auditoría:** `/api/logs/`
+```txt
+arbitrage
+```
 
-### 9.2 Payloads de WebSockets (Django Channels)
-El flujo de datos en vivo debe canalizarse preferiblemente mediante una única conexión multiplexada (ej. `/ws/dashboard/`) para emitir los siguientes eventos:
-- `market.ticker.updated`
-- `opportunity.detected`
-- `trade.executed`
-- `wallet.updated`
-- `system.log.created`
+Modelo:
+
+```txt
+ArbitrageOpportunity
+```
+
+Campos:
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `id` | UUID | Identificador. |
+| `symbol` | CharField | Par operado. |
+| `buy_exchange` | ForeignKey Exchange | Exchange donde se compra. |
+| `sell_exchange` | ForeignKey Exchange | Exchange donde se vende. |
+| `ask_price` | DecimalField | Precio de compra. |
+| `bid_price` | DecimalField | Precio de venta. |
+| `volume_available` | DecimalField | Volumen máximo ejecutable. |
+| `gross_spread` | DecimalField | Diferencia bruta en USD. |
+| `gross_spread_percent` | DecimalField | Diferencia bruta en %. |
+| `estimated_fees` | DecimalField | Fees estimados. |
+| `estimated_slippage` | DecimalField | Slippage estimado. |
+| `withdrawal_fee` | DecimalField | Fee estimado de retiro. |
+| `latency_penalty` | DecimalField | Penalización por latencia. |
+| `net_profit` | DecimalField | Ganancia neta estimada. |
+| `net_profit_percent` | DecimalField | Ganancia neta %. |
+| `status` | CharField choices | Estado de oportunidad. |
+| `decision_reason` | TextField | Explicación de decisión. |
+| `detected_at` | DateTimeField | Momento de detección. |
+| `created_at` | DateTimeField | Momento de guardado. |
+
+Estados oficiales:
+
+```txt
+detected
+profitable
+discarded
+executed
+failed
+```
+
+Regla:
+
+- Si `net_profit_percent` supera el umbral configurado y existe liquidez, el estado será `profitable`.
+- Si no supera el umbral, el estado será `discarded`.
+- Si se simula una operación sobre ella, el estado pasa a `executed`.
 
 ---
 
-## 10. Restricciones y Reglas de Negocio Centrales
+## 5. SimulatedTrade
 
-### 10.1 Cálculo de Rentabilidad Neta Estricto
-Cualquier oportunidad debe computarse bajo la siguiente fórmula de rentabilidad neta antes de autorizar su ejecución:
-`Beneficio Neto = (Precio Bid * Cantidad) - (Precio Ask * Cantidad) - Suma(Comisiones Trading) - Comisión Retiro - Costo por Slippage - Penalización por Latencia`
+App:
 
-### 10.2 Criterios de Autorización de Ejecución
-Una operación simulada está estrictamente autorizada solo si se cumplen simultáneamente todas las siguientes precondiciones:
-1. `Beneficio Neto Estimado (%) >= Umbral Mínimo Configurado`
-2. `Volumen Disponible L2 >= Volumen Mínimo Requerido`
-3. `Latencia <= Latencia Máxima Permitida`
-4. Los saldos de las billeteras satisfacen la liquidez requerida para ambas transacciones (incluyendo comisiones).
-5. Los mecanismos de gestión de riesgo (Circuit Breakers) permanecen inactivos.
+```txt
+trading
+```
 
-### 10.3 Ejecución Parcial
-En escenarios donde la liquidez del Order Book sea inferior al tamaño máximo de operación configurado, el motor debe degradar elegantemente a una ejecución parcial, recalculando los costos y ajustando el volumen a:
-`Cantidad a Ejecutar = MIN(Tamaño Máximo Configurado, Volumen Disponible, Límite de Billetera)`
+Modelo:
 
-### 10.4 Razonamiento del Sistema
-El sistema debe poseer un alto grado de explicabilidad. Toda oportunidad detectada que concluya su ciclo de vida (ya sea en descarte o ejecución) debe persistir de manera obligatoria la razón algorítmica de la decisión, proporcionando transparencia para la trazabilidad y auditoría operativa.
+```txt
+SimulatedTrade
+```
+
+Campos:
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `id` | UUID | Identificador. |
+| `opportunity` | OneToOne/ForeignKey | Oportunidad ejecutada. |
+| `symbol` | CharField | Par. |
+| `buy_exchange` | ForeignKey Exchange | Exchange de compra. |
+| `sell_exchange` | ForeignKey Exchange | Exchange de venta. |
+| `requested_quantity_btc` | DecimalField | Cantidad deseada. |
+| `executed_quantity_btc` | DecimalField | Cantidad ejecutada. |
+| `buy_price` | DecimalField | Precio de compra. |
+| `sell_price` | DecimalField | Precio de venta. |
+| `buy_cost` | DecimalField | Costo bruto de compra. |
+| `sell_revenue` | DecimalField | Ingreso bruto de venta. |
+| `buy_fee` | DecimalField | Fee de compra. |
+| `sell_fee` | DecimalField | Fee de venta. |
+| `withdrawal_fee` | DecimalField | Fee simulado de retiro. |
+| `slippage_cost` | DecimalField | Costo por slippage. |
+| `latency_cost` | DecimalField | Costo por latencia. |
+| `net_profit` | DecimalField | Resultado neto. |
+| `status` | CharField choices | Estado de operación. |
+| `failure_reason` | TextField | Motivo si falla. |
+| `executed_at` | DateTimeField | Fecha de ejecución. |
+| `created_at` | DateTimeField | Creación. |
+
+Estados oficiales:
+
+```txt
+executed
+partially_executed
+failed
+discarded
+```
+
+---
+
+## 6. Wallet
+
+App:
+
+```txt
+wallets
+```
+
+Modelo:
+
+```txt
+Wallet
+```
+
+Campos:
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `id` | UUID | Identificador. |
+| `exchange` | OneToOne Exchange | Exchange asociado. |
+| `btc_available` | DecimalField | BTC disponible. |
+| `usdt_available` | DecimalField | USDT disponible. |
+| `btc_locked` | DecimalField | BTC bloqueado. |
+| `usdt_locked` | DecimalField | USDT bloqueado. |
+| `total_value_usd` | DecimalField | Valor total estimado. |
+| `updated_at` | DateTimeField | Última actualización. |
+
+Regla:
+
+- Toda operación simulada debe actualizar wallets.
+- Toda actualización debe registrar movimientos.
+
+---
+
+## 7. WalletMovement
+
+App:
+
+```txt
+wallets
+```
+
+Modelo:
+
+```txt
+WalletMovement
+```
+
+Campos:
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `id` | UUID | Identificador. |
+| `wallet` | ForeignKey Wallet | Wallet afectada. |
+| `trade` | ForeignKey SimulatedTrade nullable | Trade relacionado. |
+| `movement_type` | CharField choices | Tipo de movimiento. |
+| `asset` | CharField | BTC o USDT. |
+| `amount` | DecimalField | Cantidad movida. |
+| `balance_before` | DecimalField | Balance antes. |
+| `balance_after` | DecimalField | Balance después. |
+| `reference` | CharField | Referencia legible. |
+| `created_at` | DateTimeField | Fecha. |
+
+Tipos oficiales:
+
+```txt
+buy
+sell
+fee
+lock
+release
+adjustment
+```
+
+---
+
+## 8. SystemLog
+
+App:
+
+```txt
+system_logs
+```
+
+Modelo:
+
+```txt
+SystemLog
+```
+
+Campos:
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `id` | UUID | Identificador. |
+| `level` | CharField choices | Nivel del evento. |
+| `source` | CharField | Módulo que generó el log. |
+| `message` | TextField | Mensaje legible. |
+| `metadata` | JSONField | Datos extra. |
+| `created_at` | DateTimeField | Fecha. |
+
+Niveles oficiales:
+
+```txt
+info
+success
+warn
+error
+```
+
+---
+
+## 9. BotSettings
+
+App:
+
+```txt
+bot_config
+```
+
+Modelo:
+
+```txt
+BotSettings
+```
+
+Campos:
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `id` | UUID | Identificador. |
+| `min_profit_percent` | DecimalField | Umbral mínimo de ganancia. |
+| `max_trade_size_btc` | DecimalField | Tamaño máximo por operación. |
+| `min_volume_btc` | DecimalField | Volumen mínimo disponible. |
+| `slippage_model` | CharField | Modelo de slippage. |
+| `max_latency_ms` | PositiveIntegerField | Latencia máxima permitida. |
+| `daily_max_loss_usd` | DecimalField | Máxima pérdida diaria. |
+| `circuit_breaker_enabled` | BooleanField | Estado circuit breaker. |
+| `max_trades_per_minute` | PositiveIntegerField | Límite operativo. |
+| `pause_on_feed_disconnect` | BooleanField | Pausa por desconexión. |
+| `updated_at` | DateTimeField | Actualización. |
+
+---
+
+## 10. Métricas analytics
+
+Las métricas de rendimiento se calculan desde `ArbitrageOpportunity` y `SimulatedTrade`. No se requiere tabla materializada para el MVP.
+
+Endpoints agregados devuelven:
+
+- P&L acumulado.
+- Win rate.
+- Ganancia promedio.
+- Costo total por fees.
+- Oportunidades por estado.
+- Ganancia por par de exchanges.
+
+---
+
+## 11. Reglas obligatorias de precisión financiera
+
+- Usar `DecimalField`; no usar `FloatField` para dinero, BTC o porcentajes.
+- Guardar precios con precisión suficiente.
+- Guardar todos los costos por separado.
+- Registrar la razón de decisión en cada oportunidad.
+- Registrar logs en cada evento importante.
+- Mantener transacciones atómicas al simular trades.
+
+---
+
+## 12. Criterio de aceptación backend
+
+El backend está completo para el MVP cuando existen:
+
+- Modelos migrados.
+- Seed data.
+- Endpoints REST.
+- WebSocket dashboard.
+- Motor de detección.
+- Simulación de operaciones.
+- Actualización de wallets.
+- Logs de sistema.
+- Settings editables.
