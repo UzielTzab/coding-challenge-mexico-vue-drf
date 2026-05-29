@@ -109,7 +109,12 @@ Parámetros globales que dictan el comportamiento y gestión de riesgos del algo
 
 ## 9. Contratos de API REST y Eventos de Tiempo Real
 
-### 9.1 Endpoints REST Principales
+### 9.1 Documentación Interactiva (Swagger / OpenAPI)
+- **Esquema OpenAPI:** `/api/schema/`
+- **Swagger UI:** `/api/docs/swagger/`
+- **Redoc UI:** `/api/docs/redoc/`
+
+### 9.2 Endpoints REST Principales
 - **Mercados:** `/api/markets/tickers/`, `/api/exchanges/`
 - **Oportunidades:** `/api/opportunities/`, `/api/opportunities/summary/`, `/api/opportunities/{id}/simulate/`
 - **Operaciones:** `/api/trades/`, `/api/trades/summary/`
