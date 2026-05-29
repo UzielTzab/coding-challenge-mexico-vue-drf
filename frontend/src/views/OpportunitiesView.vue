@@ -1,13 +1,20 @@
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
 import AppCard from '../components/ui/AppCard.vue';
 import AppTable from '../components/ui/AppTable.vue';
-import AppBadge from '../components/ui/AppBadge.vue';
+import OpportunityFilters from '../components/opportunities/OpportunityFilters.vue';
+import OpportunityDetailDrawer from '../components/opportunities/OpportunityDetailDrawer.vue';
+import OpportunityStatusBadge from '../components/opportunities/OpportunityStatusBadge.vue';
 import { useOpportunitiesStore } from '../stores/opportunities.store';
+import { getOpportunities } from '../services/opportunities.service';
 import { useFormatters } from '../composables/useFormatters';
-import { computed } from 'vue';
 
 const store = useOpportunitiesStore();
 const { formatUSD, formatPercent } = useFormatters();
+
+const isLoading = ref(false);
+const isDrawerOpen = ref(false);
+const selectedOpportunity = ref<any>(null);
 
 const columns = [
   { key: 'id', label: 'ID' },
@@ -21,12 +28,32 @@ const columns = [
 
 const data = computed(() => store.items);
 
-const getBadgeVariant = (status: string) => {
-  if (status === 'rentable') return 'success';
-  if (status === 'descartada') return 'danger';
-  if (status === 'ejecutada') return 'info';
-  return 'neutral';
+const loadData = async (filters = {}) => {
+  isLoading.value = true;
+  try {
+    const result = await getOpportunities(filters);
+    // Asumiendo que el backend retorna un arreglo o { results: [...] }
+    const items = result.results || result;
+    store.items = items;
+  } catch (error) {
+    console.error('Error fetching opportunities:', error);
+  } finally {
+    isLoading.value = false;
+  }
 };
+
+const handleFilter = (filters: any) => {
+  loadData(filters);
+};
+
+const openDetail = (row: any) => {
+  selectedOpportunity.value = row;
+  isDrawerOpen.value = true;
+};
+
+onMounted(() => {
+  loadData();
+});
 </script>
 
 <template>
@@ -36,25 +63,32 @@ const getBadgeVariant = (status: string) => {
       <p class="text-muted">Historial completo de las oportunidades detectadas por el sistema.</p>
     </div>
     
+    <OpportunityFilters @filter="handleFilter" />
+
     <AppCard>
-      <AppTable :columns="columns" :data="data">
-        <template #id="{ item }">
-          <span class="text-muted text-xs">{{ item.id.substring(0, 8) }}</span>
+      <AppTable :columns="columns" :data="data" :loading="isLoading" @row-click="openDetail">
+        <template #cell-id="{ item }">
+          <span class="text-muted text-xs">#{{ item.id?.toString().substring(0, 8) }}</span>
         </template>
-        <template #profit_usd="{ item }">
+        <template #cell-profit_usd="{ item }">
           <span class="numeric text-success">+{{ formatUSD(item.profit_usd) }}</span>
         </template>
-        <template #profit_percent="{ item }">
+        <template #cell-profit_percent="{ item }">
           <span class="numeric text-success">{{ formatPercent(item.profit_percent) }}</span>
         </template>
-        <template #status="{ item }">
-          <AppBadge :variant="getBadgeVariant(item.status)">{{ item.status }}</AppBadge>
+        <template #cell-status="{ item }">
+          <OpportunityStatusBadge :status="item.status || 'detected'" />
         </template>
-        <template #timestamp="{ item }">
+        <template #cell-timestamp="{ item }">
           <span class="text-muted">{{ new Date(item.timestamp).toLocaleString() }}</span>
         </template>
       </AppTable>
     </AppCard>
+
+    <OpportunityDetailDrawer 
+      v-model="isDrawerOpen" 
+      :opportunity="selectedOpportunity" 
+    />
   </div>
 </template>
 
