@@ -1,7 +1,10 @@
-from django.urls import path
-from .views import OpportunityListView, OpportunitySummaryView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import ArbitrageOpportunityViewSet
+
+router = DefaultRouter()
+router.register(r'', ArbitrageOpportunityViewSet, basename='arbitrageopportunity')
 
 urlpatterns = [
-    path('', OpportunityListView.as_view(), name='opportunity-list'),
-    path('summary/', OpportunitySummaryView.as_view(), name='opportunity-summary'),
+    path('', include(router.urls)),
 ]

@@ -1,6 +1,11 @@
-from django.urls import path
-from .views import SystemLogListView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import SystemLogViewSet, BotRuntimeStateViewSet
+
+router = DefaultRouter()
+router.register(r'', SystemLogViewSet, basename='systemlog')
+router.register(r'settings', BotRuntimeStateViewSet, basename='botruntimestate')
 
 urlpatterns = [
-    path('', SystemLogListView.as_view(), name='log-list'),
+    path('', include(router.urls)),
 ]

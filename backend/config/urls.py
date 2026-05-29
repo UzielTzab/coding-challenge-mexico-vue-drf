@@ -14,4 +14,5 @@ urlpatterns = [
     path('api/trades/', include('apps.trading.urls')),
     path('api/wallets/', include('apps.wallets.urls')),
     path('api/logs/', include('apps.system_logs.urls')),
+    path('api/analytics/', include('apps.analytics.urls')),
 ]

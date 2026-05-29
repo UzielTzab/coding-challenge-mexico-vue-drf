@@ -1,25 +1,20 @@
-from rest_framework import generics
-from rest_framework.views import APIView
+from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import Sum
 from .models import ArbitrageOpportunity
-from .serializers import ArbitrageOpportunitySerializer
+from rest_framework import serializers
 
-class OpportunityListView(generics.ListAPIView):
+class ArbitrageOpportunitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArbitrageOpportunity
+        fields = '__all__'
+
+class ArbitrageOpportunityViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ArbitrageOpportunity.objects.all().order_by('-detected_at')
     serializer_class = ArbitrageOpportunitySerializer
 
-class OpportunitySummaryView(APIView):
-    def get(self, request):
-        total = ArbitrageOpportunity.objects.count()
-        profitable = ArbitrageOpportunity.objects.filter(status='profitable').count()
-        executed = ArbitrageOpportunity.objects.filter(status='executed').count()
-        discarded = ArbitrageOpportunity.objects.filter(status='discarded').count()
-        profit = ArbitrageOpportunity.objects.filter(status='executed').aggregate(Sum('net_profit'))['net_profit__sum'] or 0
-        return Response({
-            "total_detected": total,
-            "profitable": profitable,
-            "discarded": discarded,
-            "executed": executed,
-            "potential_profit_usd": profit
-        })
+    @action(detail=True, methods=['post'])
+    def simulate(self, request, pk=None):
+        opp = self.get_object()
+        # Logic for simulation execution will go here
+        return Response({"status": "success", "message": "Simulation triggered for opportunity", "opportunity_id": opp.id})

@@ -8,9 +8,14 @@ class MarketSnapshot(models.Model):
     best_ask = models.DecimalField(max_digits=20, decimal_places=8)
     bid_volume = models.DecimalField(max_digits=20, decimal_places=8, default=0)
     ask_volume = models.DecimalField(max_digits=20, decimal_places=8, default=0)
-    spread = models.DecimalField(max_digits=10, decimal_places=6, default=0)
+    spread = models.DecimalField(max_digits=20, decimal_places=8, default=0)
     latency_ms = models.PositiveIntegerField(default=0)
-    received_at = models.DateTimeField()
+    received_at = models.DateTimeField(db_index=True)
+    raw_payload = models.JSONField(blank=True, null=True)
 
-    def __str__(self):
-        return f"{self.exchange.code} - {self.symbol} - {self.received_at}"
+class OrderBookLevel(models.Model):
+    snapshot = models.ForeignKey(MarketSnapshot, on_delete=models.CASCADE, related_name='levels')
+    side = models.CharField(max_length=10) # buy/sell
+    price = models.DecimalField(max_digits=20, decimal_places=8)
+    quantity = models.DecimalField(max_digits=20, decimal_places=8)
+    level_index = models.PositiveIntegerField(default=0)
