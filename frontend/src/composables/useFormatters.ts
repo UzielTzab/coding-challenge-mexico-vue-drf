@@ -11,5 +11,9 @@ export const useFormatters = () => {
     return value.toFixed(2) + '%';
   };
 
-  return { formatUSD, formatBTC, formatPercent };
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  return { formatUSD, formatBTC, formatPercent, formatDate };
 };

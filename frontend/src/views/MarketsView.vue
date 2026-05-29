@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue';
 import AppCard from '../components/ui/AppCard.vue';
 import AppTable from '../components/ui/AppTable.vue';
 import { useMarketStore } from '../stores/market.store';
@@ -7,6 +8,8 @@ import { computed } from 'vue';
 
 const store = useMarketStore();
 const { formatUSD } = useFormatters();
+
+const isLoading = ref(false);
 
 const columns = [
   { key: 'exchange', label: 'Exchange' },
@@ -17,6 +20,11 @@ const columns = [
 ];
 
 const data = computed(() => Object.values(store.snapshots));
+
+onMounted(() => {
+  // If there was an API for markets historical we would fetch it here.
+  // For now it's populated by WS.
+});
 </script>
 
 <template>
@@ -27,14 +35,14 @@ const data = computed(() => Object.values(store.snapshots));
     </div>
     
     <AppCard>
-      <AppTable :columns="columns" :data="data">
-        <template #bid="{ item }">
+      <AppTable :columns="columns" :data="data" :loading="isLoading">
+        <template #cell-bid="{ item }">
           <span class="numeric text-success">{{ formatUSD(item.bid) }}</span>
         </template>
-        <template #ask="{ item }">
+        <template #cell-ask="{ item }">
           <span class="numeric text-danger">{{ formatUSD(item.ask) }}</span>
         </template>
-        <template #timestamp="{ item }">
+        <template #cell-timestamp="{ item }">
           <span class="text-muted">{{ new Date(item.timestamp).toLocaleTimeString() }}</span>
         </template>
       </AppTable>
