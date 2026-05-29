@@ -1,26 +1,36 @@
 :root {
-  --color-bg-dashboard: #0C0E1F;
-  --color-bg-sidebar: #14172A;
-  --color-primary-light: #7EB0F3;
-  --color-primary-strong: #4451BB;
-  --color-success: #03B987;
-  --color-danger: #FA6C6E;
-  --color-warning: #F4B740;
-  --color-bg-card: #111529;
-  --color-bg-card-soft: #171B33;
-  --color-bg-terminal: #070A16;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-text-primary: #FFFFFF;
-  --color-text-secondary: #A8B0C3;
-  --color-text-muted: #6F7890;
+  /* Fondo general y layout (Estilo Navy Dark) */
+  --color-bg-base: #0E1226; /* Fondo principal más oscuro */
+  --color-bg-secondary: #0F121E; /* Fondo secundario profundo */
+  --color-bg-card: #151826; /* Fondo de tarjetas */
+  --color-bg-card-soft: #1A1D2D;
+  --color-bg-terminal: #0A0C11;
 
-  --gradient-primary: linear-gradient(180deg, #7EB0F3 0%, #4451BB 100%);
+  /* Bordes (sutiles y sin líneas agresivas) */
+  --color-border: rgba(255, 255, 255, 0.04);
   
-  --sidebar-width: 260px;
-  --header-height: 72px;
-  --content-padding: 24px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  /* Textos */
+  --color-text-primary: #E2E8F0;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+  
+  /* Acentos y Branding */
+  --color-primary: #3B82F6;
+  --color-primary-light: #9bc3f3;
+  --color-primary-dark: #2563EB;
+  --gradient-primary: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  
+  /* Estados / Semántica */
+  --color-success: #10B981; /* Verde vibrante minimalista */
+  --color-danger: #EF4444; /* Rojo vibrante */
+  --color-warning: #F59E0B;
+  
+  /* Tipografía base */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  /* Radios de borde más consistentes */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 }

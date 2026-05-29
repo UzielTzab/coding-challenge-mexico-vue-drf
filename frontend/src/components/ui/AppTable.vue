@@ -56,25 +56,29 @@ defineProps<Props>();
 .app-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--text-sm, 14px);
+  font-size: var(--text-sm, 13px);
 }
 
 .app-table th {
-  color: var(--color-text-secondary);
-  font-weight: 500;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   padding: 12px 16px;
   border-bottom: 1px solid var(--color-border);
   white-space: nowrap;
 }
 
 .app-table td {
-  padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
   color: var(--color-text-primary);
+  font-family: var(--font-mono, monospace);
 }
 
 .app-table tbody tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.01);
 }
 
 .table-loading {

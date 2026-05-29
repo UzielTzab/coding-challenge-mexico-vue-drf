@@ -442,6 +442,24 @@ Esta pantalla se construye primero.
 
 ## 14. Criterio de aceptación frontend
 
+### Paleta de Colores Oficial (Navy Dark)
+*   **Fondo Base:** `#0B0E14`
+*   **Fondo Sidebar:** `#0F121E`
+*   **Fondo Tarjetas:** `#151826` y `#1A1D2D`
+*   **Acento Primario:** `#3B82F6` a `#2563EB` (gradiente)
+*   **Éxito:** `#10B981` (Minimalista vibrante)
+*   **Peligro:** `#EF4444`
+*   **Texto Principal:** `#E2E8F0`
+*   **Texto Muted:** `#64748B`
+
+### Tipografía
+*   **Fuente Principal:** `Inter` (sans-serif) para la interfaz general.
+*   **Fuente Numérica/Logs:** `JetBrains Mono` (monospace) para montos, precios y consola.
+*   **Estilo Dashboard:** Uso extensivo de `.uppercase-label` (font-size: 11px, letter-spacing: 0.08em) para etiquetas secundarias.
+
+### Iconografía
+*   **Librería:** Google Material Symbols (Outlined) cargado vía CDN para consistencia estética y peso ligero.
+
 El frontend se considera correcto cuando:
 
 - Respeta la paleta oficial.

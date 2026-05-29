@@ -53,7 +53,7 @@ const getBadgeVariant = (status: string) => {
 </template>
 
 <style scoped>
-.opp-card { display: flex; flex-direction: column; height: 100%; }
+.opp-card { display: flex; flex-direction: column; height: 100%; background-color: var(--color-bg-base); }
 .opp-header { margin-bottom: 16px; }
 .opp-header h3 { margin: 0; font-size: 16px; }
 </style>

@@ -19,8 +19,8 @@ import AppHeader from './AppHeader.vue';
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: var(--sidebar-width, 260px) 1fr;
-  background: var(--color-bg-dashboard);
+  grid-template-columns: var(--sidebar-width, 240px) 1fr;
+  background: var(--color-bg-base);
 }
 
 .app-main {

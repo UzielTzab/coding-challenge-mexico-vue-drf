@@ -3,7 +3,7 @@ import AppCard from '../ui/AppCard.vue';
 </script>
 
 <template>
-  <AppCard class="exec-panel" variant="highlighted">
+  <AppCard class="exec-panel" variant="soft">
     <h3>Panel de Ejecución</h3>
     <p class="text-muted">Selecciona una oportunidad para ver el desglose de ejecución simulada.</p>
   </AppCard>

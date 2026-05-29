@@ -16,23 +16,25 @@ withDefaults(defineProps<Props>(), {
 
 <style scoped>
 .app-card {
-  background: var(--color-bg-card);
+  background: var(--color-bg-base);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg, 16px);
-  padding: 20px;
+  border-radius: var(--radius-lg, 12px);
+  padding: 24px;
 }
 
 .app-card--soft {
-  background: var(--color-bg-card-soft);
+  background: var(--color-bg-secondary);
+  border-color: transparent;
 }
 
 .app-card--highlighted {
-  border-color: rgba(126, 176, 243, 0.65);
-  box-shadow: 0 0 24px rgba(68, 81, 187, 0.25);
+  border-color: rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 24px rgba(59, 130, 246, 0.05);
 }
 
 .app-card--terminal {
   background: var(--color-bg-terminal);
   font-family: var(--font-mono, monospace);
+  border-color: transparent;
 }
 </style>
