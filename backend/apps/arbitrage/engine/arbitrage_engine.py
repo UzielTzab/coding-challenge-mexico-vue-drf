@@ -46,40 +46,70 @@ class ArbitrageEngine:
 
             # 3. Decision Making
             is_profitable = profit_data["is_profitable"]
-            status = 'profitable' if is_profitable else 'discarded'
-            reason = 'Margen positivo después de comisiones' if is_profitable else 'Rentabilidad neta negativa tras comisiones y slippage'
+            from apps.system_logs.models import BotRuntimeState
+            state = BotRuntimeState.objects.first()
+            bot_running = state.is_running if state else False
 
-            # 4. Save Opportunity
-            opp = ArbitrageOpportunity.objects.create(
-                symbol=new_snapshot.symbol,
-                buy_exchange=buy_snapshot.exchange,
-                sell_exchange=sell_snapshot.exchange,
-                ask_price=buy_price,
-                bid_price=sell_price,
-                volume_available=volume,
-                gross_spread=profit_data["gross_spread"],
-                gross_spread_percent=profit_data["gross_spread_percent"],
-                estimated_fees=profit_data["estimated_fees"],
-                estimated_slippage=profit_data["slippage_usd"],
-                withdrawal_cost=profit_data["withdrawal_fee_usd"],
-                latency_penalty=profit_data["latency_penalty_usd"],
-                net_profit=profit_data["net_profit"],
-                net_profit_percent=profit_data["net_profit_percent"],
-                status=status,
-                decision_reason=reason,
-                detected_at=timezone.now()
-            )
+            if is_profitable and not bot_running:
+                status = 'discarded'
+                reason = 'Bot está pausado (is_running=False)'
+                is_profitable = False # Turn off so it doesn't execute
+            else:
+                status = 'profitable' if is_profitable else 'discarded'
+                reason = 'Margen positivo después de comisiones' if is_profitable else 'Rentabilidad neta negativa tras comisiones y slippage'
 
-            OpportunityCostBreakdown.objects.create(
-                opportunity=opp,
-                buy_fee_usd=profit_data["buy_fee_usd"],
-                sell_fee_usd=profit_data["sell_fee_usd"],
-                withdrawal_fee_usd=profit_data["withdrawal_fee_usd"],
-                slippage_usd=profit_data["slippage_usd"],
-                latency_penalty_usd=profit_data["latency_penalty_usd"]
-            )
+            # 4. Save Opportunity ONLY if it's profitable and going to be executed
+            if is_profitable:
+                opp = ArbitrageOpportunity.objects.create(
+                    symbol=new_snapshot.symbol,
+                    buy_exchange=buy_snapshot.exchange,
+                    sell_exchange=sell_snapshot.exchange,
+                    ask_price=buy_price,
+                    bid_price=sell_price,
+                    volume_available=volume,
+                    gross_spread=profit_data["gross_spread"],
+                    gross_spread_percent=profit_data["gross_spread_percent"],
+                    estimated_fees=profit_data["estimated_fees"],
+                    estimated_slippage=profit_data["slippage_usd"],
+                    withdrawal_cost=profit_data["withdrawal_fee_usd"],
+                    latency_penalty=profit_data["latency_penalty_usd"],
+                    net_profit=profit_data["net_profit"],
+                    net_profit_percent=profit_data["net_profit_percent"],
+                    status=status,
+                    decision_reason=reason,
+                    detected_at=timezone.now()
+                )
 
-            logger.info(f"Arbitrage opportunity detected: {status} - Net Profit: {profit_data['net_profit']}")
+                OpportunityCostBreakdown.objects.create(
+                    opportunity=opp,
+                    buy_fee_usd=profit_data["buy_fee_usd"],
+                    sell_fee_usd=profit_data["sell_fee_usd"],
+                    withdrawal_fee_usd=profit_data["withdrawal_fee_usd"],
+                    slippage_usd=profit_data["slippage_usd"],
+                    latency_penalty_usd=profit_data["latency_penalty_usd"]
+                )
+            else:
+                # In-memory only (para no inflar la DB con miles de registros descartados)
+                opp = ArbitrageOpportunity(
+                    id=0, # ID falso para el frontend
+                    symbol=new_snapshot.symbol,
+                    buy_exchange=buy_snapshot.exchange,
+                    sell_exchange=sell_snapshot.exchange,
+                    ask_price=buy_price,
+                    bid_price=sell_price,
+                    volume_available=volume,
+                    gross_spread=profit_data["gross_spread"],
+                    gross_spread_percent=profit_data["gross_spread_percent"],
+                    estimated_fees=profit_data["estimated_fees"],
+                    estimated_slippage=profit_data["slippage_usd"],
+                    withdrawal_cost=profit_data["withdrawal_fee_usd"],
+                    latency_penalty=profit_data["latency_penalty_usd"],
+                    net_profit=profit_data["net_profit"],
+                    net_profit_percent=profit_data["net_profit_percent"],
+                    status=status,
+                    decision_reason=reason,
+                    detected_at=timezone.now()
+                )
 
             # 5. Emit Event via Channels
             ArbitrageEngine.emit_event(opp)

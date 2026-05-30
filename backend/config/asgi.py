@@ -23,3 +23,20 @@ application = ProtocolTypeRouter({
         URLRouter(websocket_urlpatterns)
     ),
 })
+
+import asyncio
+from apps.market_data.streams.stream_manager import StreamManager
+
+class StartupMiddleware:
+    def __init__(self, inner):
+        self.inner = inner
+        self.started = False
+
+    async def __call__(self, scope, receive, send):
+        if not self.started:
+            self.started = True
+            print("🚀 Iniciando Motor de Mercado en el proceso ASGI (InMemoryLayer)...")
+            asyncio.create_task(StreamManager().start())
+        return await self.inner(scope, receive, send)
+
+application = StartupMiddleware(application)
