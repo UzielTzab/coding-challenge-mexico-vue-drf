@@ -43,8 +43,8 @@ const links = [
         <span class="text-sm">Modo: Simulación</span>
       </div>
       <div class="footer-status">
-        <span class="status-dot" :style="{ background: botStore.status === 'running' ? 'var(--color-success)' : 'var(--color-danger)' }"></span>
-        <span class="text-sm">Bot: {{ botStore.status === 'running' ? 'Activo' : 'Detenido' }}</span>
+        <span class="status-dot" :style="{ background: botStore.status === 'running' ? 'var(--color-success)' : (botStore.status === 'starting' ? 'var(--color-warning)' : 'var(--color-danger)') }"></span>
+        <span class="text-sm">Bot: {{ botStore.status === 'running' ? 'En Ejecución' : (botStore.status === 'starting' ? 'Iniciando...' : 'Detenido') }}</span>
       </div>
       <div class="footer-version">v1.0.0</div>
     </div>

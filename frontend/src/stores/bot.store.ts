@@ -2,10 +2,10 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
 export const useBotStore = defineStore('bot', () => {
-  const status = ref<'running' | 'paused' | 'stopped'>('stopped');
+  const status = ref<'running' | 'starting' | 'stopped'>('stopped');
   const latency = ref(0);
   
-  const setStatus = (newStatus: 'running' | 'paused' | 'stopped') => {
+  const setStatus = (newStatus: 'running' | 'starting' | 'stopped') => {
     status.value = newStatus;
   };
 

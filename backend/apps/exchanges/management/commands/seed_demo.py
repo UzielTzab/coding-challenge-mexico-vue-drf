@@ -144,7 +144,7 @@ class Command(BaseCommand):
 
         # 6. System Logs, BotRuntimeState & PerformanceSnapshot
         self.stdout.write("Creando System Logs & Analytics...")
-        BotRuntimeState.objects.create(is_running=True, mode='simulation', circuit_breaker_active=False)
+        BotRuntimeState.objects.create(is_running=False, mode='simulation', circuit_breaker_active=False)
         PerformanceSnapshot.objects.create(total_pnl_usd=Decimal('450.25'), total_trades=10, profitable_trades=8, failed_trades=2, win_rate_percent=Decimal('80.00'))
 
         for msg in ["Conectado a Binance WS", "Conectado a Kraken WS", "Simulación completada", "Oportunidad detectada"]:

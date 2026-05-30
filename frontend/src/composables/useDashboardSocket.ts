@@ -20,6 +20,7 @@ export const useDashboardSocket = () => {
         
         switch (data.type) {
           case 'market_update':
+            console.log(`[${new Date().toISOString()}] WS DATA RECEIVED for ${data.exchange}. Bid: ${data.best_bid}, Ask: ${data.best_ask}`);
             marketStore.upsertSnapshot({
               exchange: data.exchange,
               pair: data.symbol,

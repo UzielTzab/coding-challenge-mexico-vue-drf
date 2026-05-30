@@ -3,6 +3,8 @@ import { useRoute } from 'vue-router';
 import { computed, ref, onMounted } from 'vue';
 import { getSettings, updateSettings } from '../../services/settings.service';
 import { useBotStore } from '../../stores/bot.store';
+import AppSnackbar from '../ui/AppSnackbar.vue';
+import AppTooltip from '../ui/AppTooltip.vue';
 
 const route = useRoute();
 const botStore = useBotStore();
@@ -24,37 +26,92 @@ const pageTitle = computed(() => {
   return map[route.path] || 'Dashboard';
 });
 
+const isToggling = ref(false);
+const showSnackbar = ref(false);
+const snackbarText = ref('Bot detenido — Pulsa "Iniciar Bot" para comenzar el monitoreo en tiempo real');
+const snackbarIcon = ref('info');
+const snackbarIconColor = ref('var(--color-danger)');
+const snackbarActionText = ref('INICIAR');
+
+const showInitialSnackbar = () => {
+  snackbarText.value = 'Bot detenido — Pulsa "Iniciar Bot" para comenzar el monitoreo en tiempo real';
+  snackbarIcon.value = 'info';
+  snackbarIconColor.value = 'var(--color-danger)';
+  snackbarActionText.value = 'INICIAR';
+  showSnackbar.value = true;
+};
+
 const loadSettings = async () => {
   try {
     const data = await getSettings();
     const results = data.results || data;
     if (results && results.length > 0) {
       settingId.value = results[0].id;
-      botStore.setStatus(results[0].is_running ? 'running' : 'stopped');
+      const isRunning = results[0].is_running;
+      botStore.setStatus(isRunning ? 'running' : 'stopped');
       backendStatus.value = true;
+      
+      if (!isRunning) {
+        setTimeout(showInitialSnackbar, 500);
+      }
     }
   } catch (error) {
     console.error('Error fetching settings for bot toggle', error);
     backendStatus.value = false;
     wsStatus.value = false;
+    setTimeout(showInitialSnackbar, 500);
   }
 };
-
-const isToggling = ref(false);
 
 const toggleBot = async (state: boolean) => {
   if (!settingId.value || isToggling.value) return;
   isToggling.value = true;
+  
+  if (showSnackbar.value) {
+    showSnackbar.value = false; // Hide current snackbar while processing
+  }
+
   try {
+    if (state) {
+      botStore.setStatus('starting');
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    }
     await updateSettings(settingId.value, { is_running: state });
     botStore.setStatus(state ? 'running' : 'stopped');
     backendStatus.value = true;
+    
+    // Show success snackbar
+    setTimeout(() => {
+      snackbarText.value = state ? 'Bot iniciado con éxito. Conectado a exchanges.' : 'Bot detenido correctamente.';
+      snackbarIcon.value = 'check_circle';
+      snackbarIconColor.value = 'var(--color-success)';
+      snackbarActionText.value = '';
+      showSnackbar.value = true;
+      
+      // Auto-hide success message
+      setTimeout(() => { showSnackbar.value = false; }, 3000);
+    }, 100);
+
   } catch (error) {
     console.error('Error toggling bot', error);
     backendStatus.value = false;
+    botStore.setStatus('stopped');
+    
+    // Show error snackbar
+    setTimeout(() => {
+      snackbarText.value = 'Error al iniciar el bot. Verifica tu conexión.';
+      snackbarIcon.value = 'error';
+      snackbarIconColor.value = 'var(--color-danger)';
+      snackbarActionText.value = 'REINTENTAR';
+      showSnackbar.value = true;
+    }, 100);
   } finally {
     isToggling.value = false;
   }
+};
+
+const closeSnackbar = () => {
+  showSnackbar.value = false;
 };
 
 onMounted(() => {
@@ -81,9 +138,13 @@ onMounted(() => {
       </div>
       
       <div class="action-buttons">
-        <button v-if="botStore.status !== 'running'" class="btn-dark btn-toggle" :disabled="isToggling" @click="toggleBot(true)">
-          <div v-if="isToggling" class="btn-spinner"></div>
-          <span v-else>Iniciar Bot</span>
+        <AppTooltip v-if="botStore.status === 'stopped'" text="Conecta los WebSockets de Binance, Kraken y Bitfinex y activa la detección de arbitraje en tiempo real">
+          <button class="btn-dark btn-toggle" :disabled="isToggling" @click="toggleBot(true)">
+            <span>Iniciar Bot</span>
+          </button>
+        </AppTooltip>
+        <button v-else-if="botStore.status === 'starting'" class="btn-dark btn-toggle" disabled>
+          <div class="btn-spinner"></div>
         </button>
         <button v-else class="btn-dark btn-toggle" style="background-color: #ff3800" :disabled="isToggling" @click="toggleBot(false)">
           <div v-if="isToggling" class="btn-spinner"></div>
@@ -97,6 +158,17 @@ onMounted(() => {
       </div>
     </div>
   </header>
+  
+  <AppSnackbar
+    v-model="showSnackbar"
+    :text="snackbarText"
+    :action-text="snackbarActionText"
+    :icon="snackbarIcon"
+    :icon-color="snackbarIconColor"
+    :loading="isToggling"
+    @action="toggleBot(true)"
+    @close="closeSnackbar"
+  />
 </template>
 
 <style scoped>
