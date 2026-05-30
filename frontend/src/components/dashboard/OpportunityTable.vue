@@ -31,20 +31,24 @@ onMounted(async () => {
       <table class="opps-table">
         <thead>
           <tr>
-            <th>Par</th>
-            <th>Buy</th>
-            <th>Sell</th>
-            <th>Spread</th>
-            <th>Profit Neto</th>
+            <th>Activo (Par)</th>
+            <th>Comprar en</th>
+            <th>Vender en</th>
+            <th>Margen Bruto</th>
+            <th>Ganancia Neta</th>
           </tr>
         </thead>
         <tbody v-if="opportunities.length > 0">
           <tr v-for="opp in opportunities" :key="opp.id">
             <td>{{ opp.symbol || opp.pair || 'BTC/USDT' }}</td>
-            <td>{{ opp.buy_exchange }}</td>
-            <td>{{ opp.sell_exchange }}</td>
-            <td class="text-success">{{ formatPercent(opp.spread_percent || opp.profit_percent || 0) }}</td>
-            <td class="text-success">{{ formatUSD(opp.net_profit || opp.profit_usd || 0) }}</td>
+            <td style="text-transform: capitalize;">{{ opp.buy_exchange }}</td>
+            <td style="text-transform: capitalize;">{{ opp.sell_exchange }}</td>
+            <td :class="(opp.spread_percent || opp.profit_percent || 0) >= 0 ? 'text-success' : 'text-danger'">
+              {{ formatPercent(opp.spread_percent || opp.profit_percent || 0) }}
+            </td>
+            <td :class="(opp.net_profit || opp.profit_usd || 0) >= 0 ? 'text-success' : 'text-danger'">
+              {{ formatUSD(opp.net_profit || opp.profit_usd || 0) }}
+            </td>
           </tr>
         </tbody>
         <tbody v-else>
