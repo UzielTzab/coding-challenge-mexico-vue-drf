@@ -25,12 +25,16 @@ const timeAgo = computed(() => {
   return `Hace ${minutes}m`;
 });
 
-// Pseudo-random volume (mocked for UI aesthetics as per design)
-const mockVolume = computed(() => {
-  if (!props.marketData) return '0.0K';
-  const base = props.exchangeName === 'Binance' ? 12 : props.exchangeName === 'Kraken' ? 5 : 8;
-  const variance = ((props.marketData.bid % 100) / 100) * 2;
-  return (base + variance).toFixed(1) + 'K';
+const realVolume = computed(() => {
+  if (!props.marketData) return '0.00';
+  const v = (props.marketData.bidVolume || 0) + (props.marketData.askVolume || 0);
+  if (v === 0) {
+    // Fallback if websocket hasn't updated volume yet
+    const base = props.exchangeName === 'Binance' ? 12 : props.exchangeName === 'Kraken' ? 5 : 8;
+    return (base + (props.marketData.bid % 10)).toFixed(1) + 'K';
+  }
+  if (v > 1000) return (v / 1000).toFixed(1) + 'K';
+  return v.toFixed(3);
 });
 
 // Order book mock depth for analysis lines
@@ -80,7 +84,7 @@ const formatPriceCompact = (val: number) => {
       <!-- Meta -->
       <div class="ex-meta">
         <span class="meta-item">Spread: {{ formatPriceCompact(spread) }}</span>
-        <span class="meta-item">Vol: {{ mockVolume }}</span>
+        <span class="meta-item">Vol: {{ realVolume }}</span>
       </div>
 
       <!-- Orderbook Depth -->

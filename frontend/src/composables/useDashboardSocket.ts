@@ -2,6 +2,7 @@ import { watch } from 'vue';
 import { useWebSocket } from './useWebSocket';
 import { useMarketStore } from '../stores/market.store';
 import { useLogsStore } from '../stores/logs.store';
+import { useOpportunitiesStore } from '../stores/opportunities.store';
 
 export const useDashboardSocket = () => {
   const wsUrl = (import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000') + '/ws/dashboard/';
@@ -9,6 +10,7 @@ export const useDashboardSocket = () => {
   
   const marketStore = useMarketStore();
   const logsStore = useLogsStore();
+  const oppStore = useOpportunitiesStore();
   
   // Actually, I'll just map the events according to what is present for now.
   watch(ws, (socket) => {
@@ -23,6 +25,8 @@ export const useDashboardSocket = () => {
               pair: data.symbol,
               bid: parseFloat(data.best_bid),
               ask: parseFloat(data.best_ask),
+              bidVolume: parseFloat(data.bid_volume),
+              askVolume: parseFloat(data.ask_volume),
               timestamp: new Date().toISOString()
             });
             break;
@@ -35,7 +39,11 @@ export const useDashboardSocket = () => {
             });
             break;
           case 'opportunity_detected':
-            // oppStore.prepend(data);
+            if (data.opportunity) {
+               oppStore.prepend(data.opportunity);
+            } else {
+               oppStore.prepend(data);
+            }
             break;
           case 'trade_simulated':
             // tradesStore.prepend(data);

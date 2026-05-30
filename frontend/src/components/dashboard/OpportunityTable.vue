@@ -1,17 +1,21 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import AppCard from '../ui/AppCard.vue';
 import { getOpportunities } from '../../services/opportunities.service';
 import { useFormatters } from '../../composables/useFormatters';
+import { useOpportunitiesStore } from '../../stores/opportunities.store';
 
-const opportunities = ref<any[]>([]);
+const oppStore = useOpportunitiesStore();
+const opportunities = computed(() => oppStore.items.slice(0, 5));
 const { formatUSD, formatPercent } = useFormatters();
 
 onMounted(async () => {
   try {
     const data = await getOpportunities();
     const results = data.results || data;
-    opportunities.value = Array.isArray(results) ? results.slice(0, 5) : []; // show top 5
+    if (Array.isArray(results) && oppStore.items.length === 0) {
+      oppStore.items = results;
+    }
   } catch (error) {
     console.error('Error fetching opportunities:', error);
   }
@@ -36,11 +40,11 @@ onMounted(async () => {
         </thead>
         <tbody v-if="opportunities.length > 0">
           <tr v-for="opp in opportunities" :key="opp.id">
-            <td>{{ opp.symbol }}</td>
+            <td>{{ opp.symbol || opp.pair || 'BTC/USDT' }}</td>
             <td>{{ opp.buy_exchange }}</td>
             <td>{{ opp.sell_exchange }}</td>
-            <td class="text-success">{{ formatPercent(opp.spread_percent || 0) }}</td>
-            <td class="text-success">{{ formatUSD(opp.net_profit || 0) }}</td>
+            <td class="text-success">{{ formatPercent(opp.spread_percent || opp.profit_percent || 0) }}</td>
+            <td class="text-success">{{ formatUSD(opp.net_profit || opp.profit_usd || 0) }}</td>
           </tr>
         </tbody>
         <tbody v-else>

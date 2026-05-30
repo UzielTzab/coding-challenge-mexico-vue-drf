@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import AppInput from '../ui/AppInput.vue';
 import AppSelect from '../ui/AppSelect.vue';
-import AppButton from '../ui/AppButton.vue';
 
 const emit = defineEmits<{
   (e: 'filter', filters: any): void;
@@ -31,6 +30,11 @@ const filters = ref({
 const applyFilters = () => {
   emit('filter', filters.value);
 };
+
+// Filter automatically when any filter changes
+watch(filters, () => {
+  applyFilters();
+}, { deep: true });
 </script>
 
 <template>
@@ -51,9 +55,6 @@ const applyFilters = () => {
         v-model="filters.minProfit" 
         placeholder="Ej. 10.5" 
       />
-    </div>
-    <div class="filter-actions">
-      <AppButton variant="secondary" @click="applyFilters">Filtrar</AppButton>
     </div>
   </div>
 </template>

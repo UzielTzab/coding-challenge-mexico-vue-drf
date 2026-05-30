@@ -103,6 +103,7 @@ const chartOptions = {
   position: relative;
   width: 140px;
   height: 140px;
+  flex-shrink: 0;
 }
 
 .donut-center {

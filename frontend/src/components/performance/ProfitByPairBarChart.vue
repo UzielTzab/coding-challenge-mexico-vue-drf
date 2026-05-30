@@ -108,7 +108,8 @@ const chartOptions = {
 
 .chart-container {
   flex-grow: 1;
-  min-height: 200px;
+  min-height: 0;
+  height: 200px;
   position: relative;
   width: 100%;
 }

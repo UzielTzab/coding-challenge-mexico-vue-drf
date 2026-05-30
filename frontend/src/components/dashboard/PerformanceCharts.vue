@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import AppCard from '../ui/AppCard.vue';
 import PnlLineChart from '../performance/PnlLineChart.vue';
 </script>
 
 <template>
-  <AppCard class="charts">
-    <h3>Historial de P&L</h3>
+  <div class="charts-wrapper">
     <PnlLineChart :data="[10, 25, 45, 120, 310, 450]" />
-  </AppCard>
+  </div>
 </template>
 
 <style scoped>
-.charts { height: 100%; }
-h3 { margin: 0 0 12px 0; font-size: 16px; }
+.charts-wrapper { height: 100%; min-height: 300px; display: flex; flex-direction: column; }
+.charts-wrapper > * { flex-grow: 1; }
 </style>

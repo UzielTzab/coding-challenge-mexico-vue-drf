@@ -35,7 +35,7 @@ class StartupMiddleware:
     async def __call__(self, scope, receive, send):
         if not self.started:
             self.started = True
-            print("🚀 Iniciando Motor de Mercado en el proceso ASGI (InMemoryLayer)...")
+            print("[MARKET ENGINE] Iniciando Motor de Mercado en el proceso ASGI (InMemoryLayer)...")
             asyncio.create_task(StreamManager().start())
         return await self.inner(scope, receive, send)
 

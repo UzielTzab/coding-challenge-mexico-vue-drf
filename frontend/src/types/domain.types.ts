@@ -3,15 +3,21 @@ export interface MarketData {
   pair: string;
   bid: number;
   ask: number;
+  bidVolume?: number;
+  askVolume?: number;
   timestamp: string;
 }
 
 export interface Opportunity {
   id: string;
+  pair?: string;
+  symbol?: string;
   buy_exchange: string;
   sell_exchange: string;
   profit_usd: number;
   profit_percent: number;
+  spread_percent?: number;
+  net_profit?: number;
   status: string;
   timestamp: string;
 }

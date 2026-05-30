@@ -10,9 +10,13 @@ class KrakenNormalizer(BaseNormalizer):
         
         data = raw_message["data"][0]
         
+        symbol = data["symbol"]
+        if symbol == "BTC/USD" or symbol == "XBT/USD":
+            symbol = "BTC/USDT"
+
         return {
             "exchange_code": "kraken",
-            "symbol": data["symbol"],
+            "symbol": symbol,
             "best_bid": Decimal(str(data["bid"])),
             "bid_volume": Decimal(str(data["bid_qty"])),
             "best_ask": Decimal(str(data["ask"])),

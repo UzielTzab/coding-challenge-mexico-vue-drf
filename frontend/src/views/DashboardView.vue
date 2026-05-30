@@ -6,8 +6,6 @@ import { useMarketStore } from '../stores/market.store';
 import KpiCard from '../components/dashboard/KpiCard.vue';
 import ExchangeCard from '../components/dashboard/ExchangeCard.vue';
 import OpportunityTable from '../components/dashboard/OpportunityTable.vue';
-import ExecutionPanel from '../components/dashboard/ExecutionPanel.vue';
-import WalletSummary from '../components/dashboard/WalletSummary.vue';
 import PerformanceCharts from '../components/dashboard/PerformanceCharts.vue';
 import SystemLogPanel from '../components/dashboard/SystemLogPanel.vue';
 import AppSkeleton from '../components/ui/AppSkeleton.vue';
@@ -110,13 +108,9 @@ onMounted(async () => {
         :marketData="Object.values(marketStore.snapshots).find(m => m.exchange === 'bitfinex')" 
       />
 
-      <!-- Fila 3: Oportunidades y Ejecución -->
-      <OpportunityTable class="col-span-7" />
-      <ExecutionPanel class="col-span-5" />
-
-      <!-- Fila 4: Wallets y Charts -->
-      <WalletSummary class="col-span-5" />
-      <PerformanceCharts class="col-span-7" />
+      <!-- Fila 3: Oportunidades y Charts -->
+      <OpportunityTable class="col-span-6" />
+      <PerformanceCharts class="col-span-6" />
 
       <!-- Fila 5: Terminal -->
       <SystemLogPanel class="col-span-12" />
@@ -135,6 +129,7 @@ onMounted(async () => {
 .col-span-2 { grid-column: span 2; }
 .col-span-4 { grid-column: span 4; }
 .col-span-5 { grid-column: span 5; }
+.col-span-6 { grid-column: span 6; }
 .col-span-7 { grid-column: span 7; }
 .col-span-12 { grid-column: span 12; }
 
@@ -143,6 +138,7 @@ onMounted(async () => {
   .col-span-2 { grid-column: span 2; }
   .col-span-4 { grid-column: span 6; }
   .col-span-5 { grid-column: span 6; }
+  .col-span-6 { grid-column: span 6; }
   .col-span-7 { grid-column: span 6; }
 }
 
