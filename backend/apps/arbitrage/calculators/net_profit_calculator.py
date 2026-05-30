@@ -29,7 +29,7 @@ class NetProfitCalculator:
         withdrawal_fee_usd = withdrawal_fee_btc * buy_price  # Approx cost in USD
         
         # Fixed assumed slippage and latency (Could be dynamic later)
-        slippage_usd = Decimal('2.00')  # Flat assumed slippage
+        slippage_usd = Decimal('0.00')  # Flat assumed slippage
         latency_penalty_usd = Decimal('0.00')
 
         total_costs = buy_fee_usd + sell_fee_usd + withdrawal_fee_usd + slippage_usd + latency_penalty_usd
