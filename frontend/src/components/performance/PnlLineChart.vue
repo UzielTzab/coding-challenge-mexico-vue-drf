@@ -1,12 +1,88 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import AppCard from '../ui/AppCard.vue';
-// Asumimos el uso de Chart.js o similar, pero por ahora mostramos un placeholder estilizado
-// ya que no hay una librería de charts instalada explícitamente en el setup base.
+import { Line } from 'vue-chartjs';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Filler,
+  Legend
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Filler,
+  Legend
+);
 
 const props = defineProps<{
   data: any[];
   title?: string;
 }>();
+
+// Si no hay data real, usamos el mock provisional definido en el plan
+const chartData = computed(() => {
+  const hasData = props.data && props.data.length > 0;
+  
+  // Mock data temporal si no viene del backend
+  const labels = hasData ? props.data.map(d => d.date || '') : ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
+  const dataPoints = hasData ? props.data.map(d => d.value || 0) : [120, 250, 200, 380, 310, 450, 520];
+
+  return {
+    labels,
+    datasets: [
+      {
+        label: 'P&L USD',
+        data: dataPoints,
+        borderColor: '#5e6ad2', // var(--color-primary)
+        backgroundColor: 'rgba(94, 106, 210, 0.1)',
+        borderWidth: 2,
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#5e6ad2',
+        pointBorderColor: '#fff',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      }
+    ]
+  };
+});
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#252836',
+      titleColor: '#fff',
+      bodyColor: '#a0a0b0',
+      padding: 10,
+      cornerRadius: 4,
+      displayColors: false,
+    }
+  },
+  scales: {
+    x: {
+      grid: { display: false, drawBorder: false },
+      ticks: { color: '#a0a0b0', font: { size: 12 } }
+    },
+    y: {
+      grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+      ticks: { color: '#a0a0b0', font: { size: 12 } }
+    }
+  }
+};
 </script>
 
 <template>
@@ -15,24 +91,7 @@ const props = defineProps<{
       <span class="uppercase-label">{{ title || 'Evolución del P&L' }}</span>
     </div>
     <div class="chart-container">
-      <div v-if="!data || data.length === 0" class="empty-chart text-muted">
-        No hay suficientes datos para graficar
-      </div>
-      <div v-else class="mock-chart">
-        <!-- Mock visual de un chart de línea -->
-        <svg viewBox="0 0 100 30" class="line-svg" preserveAspectRatio="none">
-          <path d="M0,25 L10,22 L20,24 L30,15 L40,18 L50,10 L60,12 L70,5 L80,8 L90,2 L100,0" 
-                fill="none" stroke="var(--color-primary)" stroke-width="2" />
-          <path d="M0,25 L10,22 L20,24 L30,15 L40,18 L50,10 L60,12 L70,5 L80,8 L90,2 L100,0 L100,30 L0,30 Z" 
-                fill="url(#gradient)" stroke="none" />
-          <defs>
-            <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stop-color="var(--color-primary)" stop-opacity="0.3" />
-              <stop offset="100%" stop-color="var(--color-primary)" stop-opacity="0" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
+      <Line :data="chartData" :options="chartOptions" />
     </div>
   </AppCard>
 </template>
@@ -50,24 +109,8 @@ const props = defineProps<{
 
 .chart-container {
   flex-grow: 1;
-  min-height: 200px;
+  min-height: 250px;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-bg-secondary);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.mock-chart {
   width: 100%;
-  height: 100%;
-  padding-top: 20px;
-}
-
-.line-svg {
-  width: 100%;
-  height: 100%;
 }
 </style>

@@ -40,8 +40,11 @@ const loadSettings = async () => {
   }
 };
 
+const isToggling = ref(false);
+
 const toggleBot = async (state: boolean) => {
-  if (!settingId.value) return;
+  if (!settingId.value || isToggling.value) return;
+  isToggling.value = true;
   try {
     await updateSettings(settingId.value, { is_running: state });
     botStore.setStatus(state ? 'running' : 'stopped');
@@ -49,6 +52,8 @@ const toggleBot = async (state: boolean) => {
   } catch (error) {
     console.error('Error toggling bot', error);
     backendStatus.value = false;
+  } finally {
+    isToggling.value = false;
   }
 };
 
@@ -76,8 +81,14 @@ onMounted(() => {
       </div>
       
       <div class="action-buttons">
-        <button v-if="botStore.status !== 'running'" class="btn-dark" @click="toggleBot(true)">Iniciar Bot</button>
-        <button v-else class="btn-dark" style="background-color: var(--color-danger)" @click="toggleBot(false)">Pausar Bot</button>
+        <button v-if="botStore.status !== 'running'" class="btn-dark btn-toggle" :disabled="isToggling" @click="toggleBot(true)">
+          <div v-if="isToggling" class="btn-spinner"></div>
+          <span v-else>Iniciar Bot</span>
+        </button>
+        <button v-else class="btn-dark btn-toggle" style="background-color: #ff3800" :disabled="isToggling" @click="toggleBot(false)">
+          <div v-if="isToggling" class="btn-spinner"></div>
+          <span v-else>Pausar Bot</span>
+        </button>
       </div>
 
       <div class="profile-section">
@@ -152,7 +163,28 @@ onMounted(() => {
   cursor: pointer;
   transition: background 150ms;
 }
-.btn-dark:hover { background: #303446; }
+.btn-dark:hover:not(:disabled) { background: #303446; }
+.btn-dark:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.btn-toggle {
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 
 .btn-text {
   background: transparent;

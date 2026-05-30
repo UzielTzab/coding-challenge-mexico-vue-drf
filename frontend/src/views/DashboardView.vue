@@ -10,9 +10,11 @@ import ExecutionPanel from '../components/dashboard/ExecutionPanel.vue';
 import WalletSummary from '../components/dashboard/WalletSummary.vue';
 import PerformanceCharts from '../components/dashboard/PerformanceCharts.vue';
 import SystemLogPanel from '../components/dashboard/SystemLogPanel.vue';
+import AppSkeleton from '../components/ui/AppSkeleton.vue';
 
 const { connect } = useDashboardSocket();
 const marketStore = useMarketStore();
+const isLoading = ref(true);
 const summary = ref({
   global_pnl: 0,
   global_win_rate: 0,
@@ -25,7 +27,6 @@ onMounted(async () => {
   connect();
   try {
     const data = await getDashboardSummary();
-    // Manejar si viene en data.results, o como un arreglo directo, o como un objeto
     let result = data.results ? data.results : data;
     if (Array.isArray(result) && result.length > 0) result = result[0];
     
@@ -58,50 +59,68 @@ onMounted(async () => {
     }
   } catch (error) {
     console.error('Error loading exchanges:', error);
+  } finally {
+    isLoading.value = false;
   }
 });
 </script>
 
 <template>
   <div class="dashboard-grid">
-    <!-- Fila 1: KPIs (6 cards x 2 columnas = 12 cols) -->
-    <KpiCard class="col-span-2" title="P&L Total" :value="summary.global_pnl" prefix="$" />
-    <KpiCard class="col-span-2" title="Win Rate" :value="summary.global_win_rate" suffix="%" />
-    <KpiCard class="col-span-2" title="Ops Ejecutadas" :value="summary.trades_count" />
-    <KpiCard class="col-span-2" title="Oportunidades" :value="summary.opportunities_count" />
-    <KpiCard class="col-span-2" title="Costo Promedio" :value="summary.average_cost" prefix="$" />
-    <KpiCard class="col-span-2" title="Ganancia Neta" :value="summary.global_pnl" prefix="$" />
+    <template v-if="isLoading">
+      <div v-for="i in 6" :key="`kpi-${i}`" class="col-span-2">
+        <AppSkeleton height="100px" borderRadius="12px" />
+      </div>
+      <div v-for="i in 3" :key="`ex-${i}`" class="col-span-4">
+        <AppSkeleton height="220px" borderRadius="12px" />
+      </div>
+      <div class="col-span-7"><AppSkeleton height="350px" borderRadius="12px" /></div>
+      <div class="col-span-5"><AppSkeleton height="350px" borderRadius="12px" /></div>
+      <div class="col-span-5"><AppSkeleton height="300px" borderRadius="12px" /></div>
+      <div class="col-span-7"><AppSkeleton height="300px" borderRadius="12px" /></div>
+      <div class="col-span-12"><AppSkeleton height="250px" borderRadius="12px" /></div>
+    </template>
+    
+    <template v-else>
+      <!-- Fila 1: KPIs (6 cards x 2 columnas = 12 cols) -->
+      <KpiCard class="col-span-2" title="P&L Total" :value="summary.global_pnl" prefix="$" />
+      <KpiCard class="col-span-2" title="Win Rate" :value="summary.global_win_rate" suffix="%" />
+      <KpiCard class="col-span-2" title="Ops Ejecutadas" :value="summary.trades_count" />
+      <KpiCard class="col-span-2" title="Oportunidades" :value="summary.opportunities_count" />
+      <KpiCard class="col-span-2" title="Costo Promedio" :value="summary.average_cost" prefix="$" />
+      <KpiCard class="col-span-2" title="Ganancia Neta" :value="summary.global_pnl" prefix="$" />
 
-    <!-- Fila 2: Exchanges (3 cards x 4 columnas = 12 cols) -->
-    <ExchangeCard 
-      class="col-span-4" 
-      exchangeName="Binance" 
-      :connected="Object.keys(marketStore.snapshots).some(k => k.includes('binance'))" 
-      :marketData="Object.values(marketStore.snapshots).find(m => m.exchange === 'binance')" 
-    />
-    <ExchangeCard 
-      class="col-span-4" 
-      exchangeName="Kraken" 
-      :connected="Object.keys(marketStore.snapshots).some(k => k.includes('kraken'))" 
-      :marketData="Object.values(marketStore.snapshots).find(m => m.exchange === 'kraken')" 
-    />
-    <ExchangeCard 
-      class="col-span-4" 
-      exchangeName="Bitfinex" 
-      :connected="Object.keys(marketStore.snapshots).some(k => k.includes('bitfinex'))" 
-      :marketData="Object.values(marketStore.snapshots).find(m => m.exchange === 'bitfinex')" 
-    />
+      <!-- Fila 2: Exchanges (3 cards x 4 columnas = 12 cols) -->
+      <ExchangeCard 
+        class="col-span-4" 
+        exchangeName="Binance" 
+        :connected="Object.keys(marketStore.snapshots).some(k => k.includes('binance'))" 
+        :marketData="Object.values(marketStore.snapshots).find(m => m.exchange === 'binance')" 
+      />
+      <ExchangeCard 
+        class="col-span-4" 
+        exchangeName="Kraken" 
+        :connected="Object.keys(marketStore.snapshots).some(k => k.includes('kraken'))" 
+        :marketData="Object.values(marketStore.snapshots).find(m => m.exchange === 'kraken')" 
+      />
+      <ExchangeCard 
+        class="col-span-4" 
+        exchangeName="Bitfinex" 
+        :connected="Object.keys(marketStore.snapshots).some(k => k.includes('bitfinex'))" 
+        :marketData="Object.values(marketStore.snapshots).find(m => m.exchange === 'bitfinex')" 
+      />
 
-    <!-- Fila 3: Oportunidades y Ejecución -->
-    <OpportunityTable class="col-span-7" />
-    <ExecutionPanel class="col-span-5" />
+      <!-- Fila 3: Oportunidades y Ejecución -->
+      <OpportunityTable class="col-span-7" />
+      <ExecutionPanel class="col-span-5" />
 
-    <!-- Fila 4: Wallets y Charts -->
-    <WalletSummary class="col-span-5" />
-    <PerformanceCharts class="col-span-7" />
+      <!-- Fila 4: Wallets y Charts -->
+      <WalletSummary class="col-span-5" />
+      <PerformanceCharts class="col-span-7" />
 
-    <!-- Fila 5: Terminal -->
-    <SystemLogPanel class="col-span-12" />
+      <!-- Fila 5: Terminal -->
+      <SystemLogPanel class="col-span-12" />
+    </template>
   </div>
 </template>
 

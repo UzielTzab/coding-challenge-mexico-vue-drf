@@ -30,26 +30,31 @@ class StreamManager:
     def save_snapshot(self, exchange: Exchange, normalized_data: Dict[str, Any]):
         best_bid = normalized_data["best_bid"]
         best_ask = normalized_data["best_ask"]
-        spread = best_ask - best_bid
-
-        snapshot = MarketSnapshot.objects.create(
+        
+        # Optimización (Evitar miles de registros): Actualizar la fila en lugar de crear una nueva cada vez
+        snapshot, created = MarketSnapshot.objects.update_or_create(
             exchange=exchange,
             symbol=normalized_data["symbol"],
-            best_bid=best_bid,
-            best_ask=best_ask,
-            bid_volume=normalized_data["bid_volume"],
-            ask_volume=normalized_data["ask_volume"],
-            spread=spread,
-            latency_ms=normalized_data["latency_ms"],
-            received_at=normalized_data["received_at"],
-            raw_payload=normalized_data.get("raw_payload", {})
+            defaults={
+                'best_bid': best_bid,
+                'best_ask': best_ask,
+                'bid_volume': normalized_data["bid_volume"],
+                'ask_volume': normalized_data["ask_volume"],
+                'spread': best_ask - best_bid,
+                'latency_ms': normalized_data["latency_ms"],
+                'received_at': normalized_data["received_at"],
+                'raw_payload': normalized_data.get("raw_payload", {})
+            }
         )
 
-        OrderBookLevel.objects.create(
-            snapshot=snapshot, side='ask', price=best_ask, quantity=normalized_data["ask_volume"], level_index=0
+        # Update OrderBookLevel (solo nivel 0 para MVP, evitando bloat)
+        OrderBookLevel.objects.update_or_create(
+            snapshot=snapshot, side='ask', level_index=0,
+            defaults={'price': best_ask, 'quantity': normalized_data["ask_volume"]}
         )
-        OrderBookLevel.objects.create(
-            snapshot=snapshot, side='bid', price=best_bid, quantity=normalized_data["bid_volume"], level_index=0
+        OrderBookLevel.objects.update_or_create(
+            snapshot=snapshot, side='bid', level_index=0,
+            defaults={'price': best_bid, 'quantity': normalized_data["bid_volume"]}
         )
 
         # Hook for ArbitrageEngine (Fase BE-7)

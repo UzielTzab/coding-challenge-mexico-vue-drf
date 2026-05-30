@@ -6,6 +6,7 @@ import ProfitByPairBarChart from '../components/performance/ProfitByPairBarChart
 import OpportunityStatusDonut from '../components/performance/OpportunityStatusDonut.vue';
 import api from '../services/http'; // Para el endpoint de analytics
 import { useFormatters } from '../composables/useFormatters';
+import AppSkeleton from '../components/ui/AppSkeleton.vue';
 
 const { formatUSD } = useFormatters();
 
@@ -77,7 +78,20 @@ onMounted(() => {
       <p class="text-muted">Métricas de rentabilidad histórica y eficacia del motor.</p>
     </div>
     
-    <div v-if="!isLoading" class="dashboard-grid">
+    <div v-if="isLoading" class="dashboard-grid">
+      <div class="metrics-row">
+        <AppSkeleton v-for="i in 3" :key="`met-${i}`" height="110px" borderRadius="12px" />
+      </div>
+      <div class="charts-main">
+        <div class="main-chart"><AppSkeleton height="350px" borderRadius="12px" /></div>
+        <div class="side-chart"><AppSkeleton height="350px" borderRadius="12px" /></div>
+      </div>
+      <div class="charts-bottom">
+        <div class="half-chart"><AppSkeleton height="300px" borderRadius="12px" /></div>
+      </div>
+    </div>
+    
+    <div v-else class="dashboard-grid">
       <!-- Metrics Row -->
       <div class="metrics-row">
         <MetricCard 
