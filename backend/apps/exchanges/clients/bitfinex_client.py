@@ -52,6 +52,12 @@ class BitfinexClient(BaseExchangeWebSocketClient):
                     await self.callback(normalized)
         except websockets.exceptions.ConnectionClosed:
             logger.warning(f"Connection closed for {self.exchange_code}")
+        except asyncio.CancelledError:
+            raise
+        except RuntimeError as e:
+            if "shutdown" in str(e).lower():
+                raise
+            logger.error(f"Error in {self.exchange_code} listen loop: {e}")
         except Exception as e:
             logger.error(f"Error in {self.exchange_code} listen loop: {e}")
             logger.error(traceback.format_exc())

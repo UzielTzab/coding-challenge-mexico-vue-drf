@@ -15,12 +15,12 @@ const { formatUSD, formatDate } = useFormatters();
 
 const columns = [
   { key: 'id', label: 'ID Operación' },
-  { key: 'pair', label: 'Par' },
-  { key: 'side', label: 'Tipo' },
-  { key: 'exchange', label: 'Exchange' },
-  { key: 'amount', label: 'Cantidad' },
-  { key: 'price', label: 'Precio Ejecutado' },
-  { key: 'timestamp', label: 'Fecha / Hora' }
+  { key: 'symbol', label: 'Par' },
+  { key: 'route', label: 'Ruta' },
+  { key: 'quantity_btc', label: 'Volumen (BTC)' },
+  { key: 'net_profit', label: 'Ganancia Neta' },
+  { key: 'status', label: 'Estado' },
+  { key: 'executed_at', label: 'Fecha / Hora' }
 ];
 
 const handleRowClick = (row: any) => {
@@ -37,21 +37,29 @@ const handleRowClick = (row: any) => {
       @row-click="handleRowClick"
     >
       <template #cell-id="{ item }">
-        <span class="text-muted">#{{ item.id?.slice(0, 8) }}</span>
+        <span class="text-muted">#{{ item.id }}</span>
       </template>
-      <template #cell-pair="{ item }">
-        <strong>{{ item.pair }}</strong>
+      <template #cell-symbol="{ item }">
+        <strong>{{ item.symbol }}</strong>
       </template>
-      <template #cell-side="{ item }">
-        <span :class="item.side === 'buy' ? 'text-success' : 'text-danger'">
-          {{ item.side?.toUpperCase() }}
+      <template #cell-route="{ item }">
+        <span>{{ item.buy_exchange_name }} → {{ item.sell_exchange_name }}</span>
+      </template>
+      <template #cell-quantity_btc="{ item }">
+        <span class="numeric">{{ item.quantity_btc }}</span>
+      </template>
+      <template #cell-net_profit="{ item }">
+        <span :class="parseFloat(item.net_profit) >= 0 ? 'text-success' : 'text-danger'">
+          {{ formatUSD(parseFloat(item.net_profit)) }}
         </span>
       </template>
-      <template #cell-price="{ item }">
-        {{ formatUSD(item.price) }}
+      <template #cell-status="{ item }">
+        <span :class="item.status === 'executed' ? 'text-success' : 'text-danger'">
+          {{ item.status.toUpperCase() }}
+        </span>
       </template>
-      <template #cell-timestamp="{ item }">
-        <span class="text-muted">{{ formatDate(item.timestamp) }}</span>
+      <template #cell-executed_at="{ item }">
+        <span class="text-muted">{{ formatDate(item.executed_at) }}</span>
       </template>
     </AppTable>
   </div>

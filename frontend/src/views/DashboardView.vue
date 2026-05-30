@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useDashboardSocket } from '../composables/useDashboardSocket';
 import { getDashboardSummary, getExchanges } from '../services/dashboard.service';
 import { useMarketStore } from '../stores/market.store';
@@ -8,7 +8,6 @@ import KpiCard from '../components/dashboard/KpiCard.vue';
 import ExchangeCard from '../components/dashboard/ExchangeCard.vue';
 import OpportunityTable from '../components/dashboard/OpportunityTable.vue';
 import PerformanceCharts from '../components/dashboard/PerformanceCharts.vue';
-import SystemLogPanel from '../components/dashboard/SystemLogPanel.vue';
 import AppSkeleton from '../components/ui/AppSkeleton.vue';
 
 const { connect } = useDashboardSocket();
@@ -18,8 +17,16 @@ const isLoading = ref(true);
 const summary = ref({
   global_win_rate: 0,
   trades_count: 0,
+  discarded_opportunities: 0,
   opportunities_count: 0,
   average_cost: 0
+});
+
+const averageBtcPrice = computed(() => {
+  const snaps = Object.values(marketStore.snapshots);
+  if (snaps.length === 0) return 0;
+  const sum = snaps.reduce((acc, s) => acc + ((s.bid + s.ask) / 2), 0);
+  return sum / snaps.length;
 });
 
 onMounted(async () => {
@@ -33,6 +40,7 @@ onMounted(async () => {
       summary.value = {
         global_win_rate: parseFloat(result.win_rate_percent) || 0,
         trades_count: result.total_trades || 0,
+        discarded_opportunities: result.discarded_opportunities || 0,
         opportunities_count: (result.total_trades || 0) + (result.discarded_opportunities || 0),
         average_cost: parseFloat(result.total_fees_usd) || 0
       };
@@ -85,9 +93,14 @@ onMounted(async () => {
       <KpiCard class="col-span-2" title="P&L Total" :value="oppStore.totalPnl" prefix="$" />
       <KpiCard class="col-span-2" title="Win Rate" :value="summary.global_win_rate" suffix="%" />
       <KpiCard class="col-span-2" title="Ops Ejecutadas" :value="summary.trades_count" />
-      <KpiCard class="col-span-2" title="Oportunidades" :value="summary.opportunities_count" />
+      <KpiCard 
+        class="col-span-2" 
+        title="Oportunidades" 
+        :value="summary.opportunities_count" 
+        :subtextHtml="`<span><span class='success'>🟢 ${summary.trades_count} ejecutadas</span> &nbsp;|&nbsp; <span class='danger'>🔴 ${summary.discarded_opportunities} descartadas</span></span>`"
+      />
       <KpiCard class="col-span-2" title="Costo Promedio" :value="summary.average_cost" prefix="$" />
-      <KpiCard class="col-span-2" title="Ganancia Neta" :value="oppStore.totalPnl" prefix="$" />
+      <KpiCard class="col-span-2" title="Precio Promedio BTC" :value="averageBtcPrice" prefix="$" />
 
       <!-- Fila 2: Exchanges (3 cards x 4 columnas = 12 cols) -->
       <ExchangeCard 
@@ -112,9 +125,6 @@ onMounted(async () => {
       <!-- Fila 3: Oportunidades y Charts -->
       <OpportunityTable class="col-span-6" />
       <PerformanceCharts class="col-span-6" />
-
-      <!-- Fila 5: Terminal -->
-      <SystemLogPanel class="col-span-12" />
     </template>
   </div>
 </template>

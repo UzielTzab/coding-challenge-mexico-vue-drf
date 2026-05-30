@@ -66,7 +66,17 @@ const formatPriceCompact = (val: number) => {
         <span class="status-dot" :class="connected ? 'active' : ''"></span>
         <h2>{{ exchangeName }}</h2>
       </div>
-      <span class="time-ago" v-if="marketData">{{ timeAgo }}</span>
+      <div class="ex-status-right">
+        <span class="time-ago" v-if="marketData">{{ timeAgo }}</span>
+        <span class="latency" v-if="marketData && marketData.latency_ms">
+          <span class="latency-dot" :class="{
+            'green': marketData.latency_ms < 30,
+            'yellow': marketData.latency_ms >= 30 && marketData.latency_ms < 100,
+            'red': marketData.latency_ms >= 100
+          }"></span>
+          {{ marketData.latency_ms }}ms
+        </span>
+      </div>
     </div>
 
     <template v-if="marketData">
@@ -149,10 +159,33 @@ const formatPriceCompact = (val: number) => {
   letter-spacing: 0.5px;
 }
 
+.ex-status-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .time-ago {
   font-size: 13px;
   color: var(--color-text-muted);
 }
+
+.latency {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.latency-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.latency-dot.green { background: var(--color-success); box-shadow: 0 0 4px var(--color-success); }
+.latency-dot.yellow { background: var(--color-warning); box-shadow: 0 0 4px var(--color-warning); }
+.latency-dot.red { background: var(--color-danger); box-shadow: 0 0 4px var(--color-danger); }
 
 .ex-prices {
   display: flex;

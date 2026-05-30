@@ -3,6 +3,7 @@ import { useWebSocket } from './useWebSocket';
 import { useMarketStore } from '../stores/market.store';
 import { useLogsStore } from '../stores/logs.store';
 import { useOpportunitiesStore } from '../stores/opportunities.store';
+import { useUiStore } from '../stores/ui.store';
 
 export const useDashboardSocket = () => {
   const wsUrl = (import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8000') + '/ws/dashboard/';
@@ -11,6 +12,7 @@ export const useDashboardSocket = () => {
   const marketStore = useMarketStore();
   const logsStore = useLogsStore();
   const oppStore = useOpportunitiesStore();
+  const uiStore = useUiStore();
   
   // Actually, I'll just map the events according to what is present for now.
   watch(ws, (socket) => {
@@ -20,7 +22,7 @@ export const useDashboardSocket = () => {
         
         switch (data.type) {
           case 'market_update':
-            console.log(`[${new Date().toISOString()}] WS DATA RECEIVED for ${data.exchange}. Bid: ${data.best_bid}, Ask: ${data.best_ask}`);
+            // console.log(`[${new Date().toISOString()}] WS DATA RECEIVED for ${data.exchange}. Bid: ${data.best_bid}, Ask: ${data.best_ask}`);
             marketStore.upsertSnapshot({
               exchange: data.exchange,
               pair: data.symbol,
@@ -28,7 +30,8 @@ export const useDashboardSocket = () => {
               ask: parseFloat(data.best_ask),
               bidVolume: parseFloat(data.bid_volume),
               askVolume: parseFloat(data.ask_volume),
-              timestamp: new Date().toISOString()
+              timestamp: new Date().toISOString(),
+              latency_ms: data.latency_ms
             });
             break;
           case 'system_log_created':
@@ -40,10 +43,11 @@ export const useDashboardSocket = () => {
             });
             break;
           case 'opportunity_detected':
-            if (data.opportunity) {
-               oppStore.prepend(data.opportunity);
-            } else {
-               oppStore.prepend(data);
+            const opp = data.opportunity || data;
+            oppStore.prepend(opp);
+            
+            if (opp.status === 'executed' || opp.status === 'profitable') {
+              uiStore.showSnackbar(`Arbitraje Ejecutado: <strong>+$${parseFloat(opp.net_profit).toFixed(2)}</strong>`, 'success');
             }
             break;
           case 'trade_simulated':

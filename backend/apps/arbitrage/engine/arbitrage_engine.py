@@ -58,28 +58,28 @@ class ArbitrageEngine:
                 status = 'profitable' if is_profitable else 'discarded'
                 reason = 'Margen positivo después de comisiones' if is_profitable else 'Rentabilidad neta negativa tras comisiones y slippage'
 
-            # 4. Save Opportunity ONLY if it's profitable and going to be executed
-            if is_profitable:
-                opp = ArbitrageOpportunity.objects.create(
-                    symbol=new_snapshot.symbol,
-                    buy_exchange=buy_snapshot.exchange,
-                    sell_exchange=sell_snapshot.exchange,
-                    ask_price=buy_price,
-                    bid_price=sell_price,
-                    volume_available=volume,
-                    gross_spread=profit_data["gross_spread"],
-                    gross_spread_percent=profit_data["gross_spread_percent"],
-                    estimated_fees=profit_data["estimated_fees"],
-                    estimated_slippage=profit_data["slippage_usd"],
-                    withdrawal_cost=profit_data["withdrawal_fee_usd"],
-                    latency_penalty=profit_data["latency_penalty_usd"],
-                    net_profit=profit_data["net_profit"],
-                    net_profit_percent=profit_data["net_profit_percent"],
-                    status=status,
-                    decision_reason=reason,
-                    detected_at=timezone.now()
-                )
+            # 4. Save Opportunity to database
+            opp = ArbitrageOpportunity.objects.create(
+                symbol=new_snapshot.symbol,
+                buy_exchange=buy_snapshot.exchange,
+                sell_exchange=sell_snapshot.exchange,
+                ask_price=buy_price,
+                bid_price=sell_price,
+                volume_available=volume,
+                gross_spread=profit_data["gross_spread"],
+                gross_spread_percent=profit_data["gross_spread_percent"],
+                estimated_fees=profit_data["estimated_fees"],
+                estimated_slippage=profit_data["slippage_usd"],
+                withdrawal_cost=profit_data["withdrawal_fee_usd"],
+                latency_penalty=profit_data["latency_penalty_usd"],
+                net_profit=profit_data["net_profit"],
+                net_profit_percent=profit_data["net_profit_percent"],
+                status=status,
+                decision_reason=reason,
+                detected_at=timezone.now()
+            )
 
+            if is_profitable:
                 OpportunityCostBreakdown.objects.create(
                     opportunity=opp,
                     buy_fee_usd=profit_data["buy_fee_usd"],
@@ -87,28 +87,6 @@ class ArbitrageEngine:
                     withdrawal_fee_usd=profit_data["withdrawal_fee_usd"],
                     slippage_usd=profit_data["slippage_usd"],
                     latency_penalty_usd=profit_data["latency_penalty_usd"]
-                )
-            else:
-                # In-memory only (para no inflar la DB con miles de registros descartados)
-                opp = ArbitrageOpportunity(
-                    id=0, # ID falso para el frontend
-                    symbol=new_snapshot.symbol,
-                    buy_exchange=buy_snapshot.exchange,
-                    sell_exchange=sell_snapshot.exchange,
-                    ask_price=buy_price,
-                    bid_price=sell_price,
-                    volume_available=volume,
-                    gross_spread=profit_data["gross_spread"],
-                    gross_spread_percent=profit_data["gross_spread_percent"],
-                    estimated_fees=profit_data["estimated_fees"],
-                    estimated_slippage=profit_data["slippage_usd"],
-                    withdrawal_cost=profit_data["withdrawal_fee_usd"],
-                    latency_penalty=profit_data["latency_penalty_usd"],
-                    net_profit=profit_data["net_profit"],
-                    net_profit_percent=profit_data["net_profit_percent"],
-                    status=status,
-                    decision_reason=reason,
-                    detected_at=timezone.now()
                 )
 
             # 5. Emit Event via Channels
@@ -132,6 +110,7 @@ class ArbitrageEngine:
             "buy_exchange": opp.buy_exchange.code,
             "sell_exchange": opp.sell_exchange.code,
             "net_profit": str(opp.net_profit),
+            "gross_spread_percent": str(opp.gross_spread_percent),
             "status": opp.status
         }
         

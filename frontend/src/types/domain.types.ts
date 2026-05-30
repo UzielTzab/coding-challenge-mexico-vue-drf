@@ -6,6 +6,7 @@ export interface MarketData {
   bidVolume?: number;
   askVolume?: number;
   timestamp: string;
+  latency_ms?: number;
 }
 
 export interface Opportunity {
@@ -17,9 +18,11 @@ export interface Opportunity {
   profit_usd: number;
   profit_percent: number;
   spread_percent?: number;
+  gross_spread_percent?: number;
   net_profit?: number;
   status: string;
   timestamp: string;
+  detected_at?: string;
 }
 
 export interface Trade {

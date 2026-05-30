@@ -2,12 +2,10 @@
 import { ref, onMounted } from 'vue';
 import AppCard from '../components/ui/AppCard.vue';
 import OperationHistoryTable from '../components/operations/OperationHistoryTable.vue';
-import OperationDetailPanel from '../components/operations/OperationDetailPanel.vue';
 import { getTrades } from '../services/trades.service';
 
 const isLoading = ref(false);
 const operations = ref<any[]>([]);
-const selectedOperation = ref<any>(null);
 
 const loadData = async () => {
   isLoading.value = true;
@@ -19,10 +17,6 @@ const loadData = async () => {
   } finally {
     isLoading.value = false;
   }
-};
-
-const handleRowClick = (row: any) => {
-  selectedOperation.value = row;
 };
 
 onMounted(() => {
@@ -42,12 +36,7 @@ onMounted(() => {
         <OperationHistoryTable 
           :operations="operations" 
           :isLoading="isLoading"
-          @row-click="handleRowClick"
         />
-      </AppCard>
-
-      <AppCard class="detail-section">
-        <OperationDetailPanel :operation="selectedOperation" />
       </AppCard>
     </div>
   </div>
@@ -70,12 +59,6 @@ onMounted(() => {
 }
 
 .history-section {
-  flex: 2;
-}
-
-.detail-section {
   flex: 1;
-  position: sticky;
-  top: 24px;
 }
 </style>

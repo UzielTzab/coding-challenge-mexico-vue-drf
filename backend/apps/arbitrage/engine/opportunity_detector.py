@@ -34,8 +34,8 @@ class OpportunityDetector:
             sell_price = snapshot_a.best_bid
             volume = min(snapshot_b.ask_volume, snapshot_a.bid_volume)
 
-        # Cap the volume to 1 BTC maximum for safety in this simulation
-        volume = min(volume, Decimal('1.000'))
+        # Cap the volume to 0.01 BTC maximum for safety and demo continuity
+        volume = min(volume, Decimal('0.01'))
 
         return {
             "buy_snapshot": buy_snapshot,

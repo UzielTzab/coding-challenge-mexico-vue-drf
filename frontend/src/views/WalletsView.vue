@@ -14,10 +14,19 @@ const loadData = async () => {
   isLoading.value = true;
   try {
     const data = await getWallets();
-    // Assuming backend returns { results: [...] } or an array
     const results = data.results || data;
-    wallets.value = results.wallets || [];
-    movements.value = results.movements || [];
+    
+    wallets.value = results.map((w: any) => ({
+      exchange: w.exchange_name || w.exchange,
+      balances: {
+        'BTC': parseFloat(w.btc_available || '0'),
+        'USDT': parseFloat(w.usdt_available || '0')
+      },
+      totalUsdValue: parseFloat(w.total_value_usd || '0')
+    }));
+    
+    // Movements endpoint not yet implemented in backend API, leaving empty
+    movements.value = [];
   } catch (error) {
     console.error('Error fetching wallets:', error);
   } finally {

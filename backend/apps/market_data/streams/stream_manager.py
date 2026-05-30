@@ -21,10 +21,10 @@ class StreamManager:
         ]
         self.exchanges_cache = {}
 
-    @sync_to_async
-    def get_exchange(self, code: str):
+    async def get_exchange(self, code: str):
         if code not in self.exchanges_cache:
-            exchange = Exchange.objects.filter(code=code).first()
+            from asgiref.sync import sync_to_async
+            exchange = await sync_to_async(Exchange.objects.filter(code=code).first)()
             self.exchanges_cache[code] = exchange
         return self.exchanges_cache[code]
 
@@ -119,9 +119,17 @@ class StreamManager:
                 await client.connect()
                 await client.subscribe()
                 await client.listen()
+            except asyncio.CancelledError:
+                # El servidor se está apagando (Ctrl+C), salimos del loop limpio
+                break
+            except RuntimeError as e:
+                if "interpreter shutdown" in str(e):
+                    break
+                logger.error(f"Client {client.exchange_code} failed: {e}. Reconnecting in 5 seconds...")
+                await asyncio.sleep(5)
             except Exception as e:
                 logger.error(f"Client {client.exchange_code} failed: {e}. Reconnecting in 5 seconds...")
-            await asyncio.sleep(5)
+                await asyncio.sleep(5)
 
     async def start(self):
         tasks = [self.run_client(client) for client in self.clients]
