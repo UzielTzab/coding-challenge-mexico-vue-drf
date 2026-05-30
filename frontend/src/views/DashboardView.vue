@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useDashboardSocket } from '../composables/useDashboardSocket';
 import { getDashboardSummary, getExchanges } from '../services/dashboard.service';
 import { useMarketStore } from '../stores/market.store';
+import { useOpportunitiesStore } from '../stores/opportunities.store';
 import KpiCard from '../components/dashboard/KpiCard.vue';
 import ExchangeCard from '../components/dashboard/ExchangeCard.vue';
 import OpportunityTable from '../components/dashboard/OpportunityTable.vue';
@@ -12,9 +13,9 @@ import AppSkeleton from '../components/ui/AppSkeleton.vue';
 
 const { connect } = useDashboardSocket();
 const marketStore = useMarketStore();
+const oppStore = useOpportunitiesStore();
 const isLoading = ref(true);
 const summary = ref({
-  global_pnl: 0,
   global_win_rate: 0,
   trades_count: 0,
   opportunities_count: 0,
@@ -30,12 +31,12 @@ onMounted(async () => {
     
     if (result) {
       summary.value = {
-        global_pnl: parseFloat(result.total_pnl_usd) || 0,
         global_win_rate: parseFloat(result.win_rate_percent) || 0,
         trades_count: result.total_trades || 0,
         opportunities_count: (result.total_trades || 0) + (result.discarded_opportunities || 0),
         average_cost: parseFloat(result.total_fees_usd) || 0
       };
+      oppStore.setInitialPnl(parseFloat(result.total_pnl_usd) || 0);
     }
   } catch (error) {
     console.error('Error loading dashboard summary', error);
@@ -81,12 +82,12 @@ onMounted(async () => {
     
     <template v-else>
       <!-- Fila 1: KPIs (6 cards x 2 columnas = 12 cols) -->
-      <KpiCard class="col-span-2" title="P&L Total" :value="summary.global_pnl" prefix="$" />
+      <KpiCard class="col-span-2" title="P&L Total" :value="oppStore.totalPnl" prefix="$" />
       <KpiCard class="col-span-2" title="Win Rate" :value="summary.global_win_rate" suffix="%" />
       <KpiCard class="col-span-2" title="Ops Ejecutadas" :value="summary.trades_count" />
       <KpiCard class="col-span-2" title="Oportunidades" :value="summary.opportunities_count" />
       <KpiCard class="col-span-2" title="Costo Promedio" :value="summary.average_cost" prefix="$" />
-      <KpiCard class="col-span-2" title="Ganancia Neta" :value="summary.global_pnl" prefix="$" />
+      <KpiCard class="col-span-2" title="Ganancia Neta" :value="oppStore.totalPnl" prefix="$" />
 
       <!-- Fila 2: Exchanges (3 cards x 4 columnas = 12 cols) -->
       <ExchangeCard 

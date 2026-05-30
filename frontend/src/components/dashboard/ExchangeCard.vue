@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import AppCard from '../ui/AppCard.vue';
+import AnimatedNumber from '../ui/AnimatedNumber.vue';
 import type { MarketData } from '../../types/domain.types';
 
 interface Props {
@@ -73,17 +74,17 @@ const formatPriceCompact = (val: number) => {
       <div class="ex-prices">
         <div class="price-col">
           <span class="label">BID</span>
-          <span class="value">{{ formatPriceCompact(marketData.bid) }}</span>
+          <span class="value"><AnimatedNumber :value="marketData.bid" :format="formatPriceCompact" /></span>
         </div>
         <div class="price-col right">
           <span class="label">ASK</span>
-          <span class="value">{{ formatPriceCompact(marketData.ask) }}</span>
+          <span class="value"><AnimatedNumber :value="marketData.ask" :format="formatPriceCompact" /></span>
         </div>
       </div>
       
       <!-- Meta -->
       <div class="ex-meta">
-        <span class="meta-item">Spread: {{ formatPriceCompact(spread) }}</span>
+        <span class="meta-item">Spread: <AnimatedNumber :value="spread" :format="formatPriceCompact" /></span>
         <span class="meta-item">Vol: {{ realVolume }}</span>
       </div>
 
