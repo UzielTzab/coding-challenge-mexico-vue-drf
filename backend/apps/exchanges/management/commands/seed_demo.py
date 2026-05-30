@@ -34,11 +34,15 @@ class Command(BaseCommand):
         coinbase = Exchange.objects.create(name="Coinbase", code="coinbase")
         ExchangeFeeProfile.objects.create(exchange=coinbase, trading_fee_percent=Decimal('0.20'), withdrawal_fee_btc=Decimal('0.0005'))
         
+        bitfinex = Exchange.objects.create(name="Bitfinex", code="bitfinex")
+        ExchangeFeeProfile.objects.create(exchange=bitfinex, trading_fee_percent=Decimal('0.20'), withdrawal_fee_btc=Decimal('0.0004'))
+        
         # 2. Wallets
         self.stdout.write("Creando Wallets...")
         Wallet.objects.create(exchange=binance, btc_available=Decimal('1.2'), usdt_available=Decimal('15000'))
         Wallet.objects.create(exchange=kraken, btc_available=Decimal('1.0'), usdt_available=Decimal('12000'))
         Wallet.objects.create(exchange=coinbase, btc_available=Decimal('0.8'), usdt_available=Decimal('9000'))
+        Wallet.objects.create(exchange=bitfinex, btc_available=Decimal('0.5'), usdt_available=Decimal('5000'))
 
         # 3. Market Snapshots and OrderBook Levels
         self.stdout.write("Creando Market Snapshots...")
@@ -73,7 +77,7 @@ class Command(BaseCommand):
 
         # 4. Opportunities
         self.stdout.write("Creando Oportunidades y CostBreakdowns...")
-        exchanges = [binance, kraken, coinbase]
+        exchanges = [binance, kraken, coinbase, bitfinex]
         opportunities = []
         for i in range(20):
             buy_ex = random.choice(exchanges)

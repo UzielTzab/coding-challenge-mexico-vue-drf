@@ -8,6 +8,7 @@ from apps.exchanges.models import Exchange
 from apps.market_data.models import MarketSnapshot, OrderBookLevel
 from apps.exchanges.clients.binance_client import BinanceClient
 from apps.exchanges.clients.kraken_client import KrakenClient
+from apps.exchanges.clients.bitfinex_client import BitfinexClient
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,8 @@ class StreamManager:
     def __init__(self):
         self.clients = [
             BinanceClient(callback=self.handle_message),
-            KrakenClient(callback=self.handle_message)
+            KrakenClient(callback=self.handle_message),
+            BitfinexClient(callback=self.handle_message)
         ]
         self.exchanges_cache = {}
 
