@@ -17,7 +17,7 @@ import AppHeader from './AppHeader.vue';
 
 <style scoped>
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
   display: grid;
   grid-template-columns: var(--sidebar-width, 240px) 1fr;
   background: var(--color-bg-base);
@@ -27,6 +27,7 @@ import AppHeader from './AppHeader.vue';
   min-width: 0;
   display: flex;
   flex-direction: column;
+  height: 100vh;
 }
 
 .app-content {

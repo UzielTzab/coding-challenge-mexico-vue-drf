@@ -107,7 +107,7 @@ const formatPriceCompact = (val: number) => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: var(--color-bg-card); /* Integrates cleanly with current theme */
+  background: var(--color-bg-base); /* Integrates cleanly with current theme */
   padding: 24px;
 }
 

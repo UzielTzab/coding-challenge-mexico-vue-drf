@@ -2,13 +2,15 @@
 import AppCard from '../ui/AppCard.vue';
 import { useFormatters } from '../../composables/useFormatters';
 
+import { computed } from 'vue';
+
 const props = defineProps<{
   data: { pair: string; profit: number }[];
 }>();
 
 const { formatUSD } = useFormatters();
 
-const maxProfit = Math.max(...(props.data?.map(d => d.profit) || [1]));
+const maxProfit = computed(() => Math.max(...(props.data?.map(d => d.profit) || [1])));
 </script>
 
 <template>

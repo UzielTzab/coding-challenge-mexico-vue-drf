@@ -91,6 +91,8 @@ onMounted(() => {
 <style scoped>
 .header {
   height: 80px;
+  min-height: 80px;
+  flex-shrink: 0;
   background: transparent;
   display: flex;
   align-items: center;

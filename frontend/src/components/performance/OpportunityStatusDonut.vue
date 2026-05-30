@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import AppCard from '../ui/AppCard.vue';
 
+import { computed } from 'vue';
+
 const props = defineProps<{
   stats: {
     executed: number;
@@ -9,8 +11,8 @@ const props = defineProps<{
   };
 }>();
 
-const total = props.stats.executed + props.stats.failed + props.stats.discarded;
-const getPercent = (val: number) => total > 0 ? Math.round((val / total) * 100) : 0;
+const total = computed(() => props.stats.executed + props.stats.failed + props.stats.discarded);
+const getPercent = (val: number) => total.value > 0 ? Math.round((val / total.value) * 100) : 0;
 </script>
 
 <template>

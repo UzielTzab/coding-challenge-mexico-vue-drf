@@ -32,10 +32,26 @@ const analytics = ref<Analytics>({
 const loadAnalytics = async () => {
   try {
     const { data } = await api.get('/api/analytics/performance/');
-    analytics.value = data;
+    let result = data.results ? data.results : data;
+    if (Array.isArray(result) && result.length > 0) result = result[0];
+    
+    if (result) {
+      analytics.value = {
+        global_pnl: parseFloat(result.total_pnl_usd) || 0,
+        global_win_rate: parseFloat(result.win_rate_percent) || 0,
+        trades_count: result.total_trades || 0,
+        pnl_history: [], // TODO: backend needs to provide this
+        profit_by_pair: [], // TODO: backend needs to provide this
+        status_stats: { 
+          executed: result.total_trades || 0, 
+          failed: result.failed_trades || 0, 
+          discarded: result.discarded_opportunities || 0 
+        }
+      };
+    }
   } catch (error) {
     console.error('Error fetching performance:', error);
-    // Mock temporal para visualización
+    // Mock temporal para visualización si falla
     analytics.value = {
       global_pnl: 1540.50,
       global_win_rate: 85,
