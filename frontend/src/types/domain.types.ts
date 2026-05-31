@@ -15,6 +15,8 @@ export interface Opportunity {
   symbol?: string;
   buy_exchange: string;
   sell_exchange: string;
+  buy_exchange_name?: string;
+  sell_exchange_name?: string;
   profit_usd: number;
   profit_percent: number;
   spread_percent?: number;

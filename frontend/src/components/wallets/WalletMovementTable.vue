@@ -42,7 +42,7 @@ const columns = [
           {{ parseFloat(item.amount) > 0 ? '+' : '' }}{{ parseFloat(item.amount).toFixed(8) }} {{ item.asset }}
         </span>
       </template>
-      <template #cell-status="{ item }">
+      <template #cell-status>
         <span class="text-muted">Completado</span>
       </template>
     </AppTable>
