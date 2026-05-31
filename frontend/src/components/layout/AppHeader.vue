@@ -153,8 +153,7 @@ onMounted(() => {
       </div>
 
       <div class="profile-section">
-        <span class="material-symbols-outlined notification-icon">notifications</span>
-        <div class="avatar"></div>
+        <span class="material-symbols-outlined avatar-icon">account_circle</span>
       </div>
     </div>
   </header>
@@ -276,19 +275,15 @@ onMounted(() => {
   border-left: 1px solid var(--color-border);
 }
 
-.notification-icon {
+.avatar-icon {
+  font-size: 32px;
   color: var(--color-text-secondary);
   cursor: pointer;
-  font-size: 20px;
+  transition: color 150ms;
 }
 
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: url('https://api.dicebear.com/7.x/avataaars/svg?seed=Felix') no-repeat center/cover;
-  background-color: var(--color-bg-card-soft);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.avatar-icon:hover {
+  color: var(--color-text-primary);
 }
 
 .text-sm { font-size: 13px; }

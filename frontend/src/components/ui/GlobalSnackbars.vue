@@ -44,10 +44,10 @@ const uiStore = useUiStore();
   min-width: 280px;
   max-width: 450px;
   padding: 14px 18px;
-  background: var(--color-bg-elevated, #2a2d3d);
-  color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+  background: var(--color-bg-card, #202230);
+  color: var(--color-text-primary, #ffffff);
+  border-radius: 0 8px 8px 0; /* Contorno izquierdo recto */
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
   border-left: 4px solid var(--color-primary);
   font-size: 14px;
 }

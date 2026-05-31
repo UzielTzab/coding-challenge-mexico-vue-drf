@@ -56,7 +56,7 @@ const handleClose = () => {
   align-items: center;
   gap: 16px;
   z-index: 9999;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
 }
 
 .snackbar-fade-enter-active,
