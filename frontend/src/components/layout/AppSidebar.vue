@@ -7,13 +7,10 @@ const botStore = useBotStore();
 
 const links = [
   { name: 'Dashboard', path: '/', icon: 'dashboard' },
-  { name: 'Mercados', path: '/markets', icon: 'storefront' },
   { name: 'Oportunidades', path: '/opportunities', icon: 'monitoring' },
   { name: 'Operaciones', path: '/operations', icon: 'swap_horiz' },
   { name: 'Wallets', path: '/wallets', icon: 'account_balance_wallet' },
   { name: 'Rendimiento', path: '/performance', icon: 'leaderboard' },
-  { name: 'Logs', path: '/logs', icon: 'description' },
-  { name: 'Configuración', path: '/settings', icon: 'settings' }
 ];
 </script>
 
