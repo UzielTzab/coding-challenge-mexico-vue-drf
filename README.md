@@ -82,7 +82,7 @@ cp .env.example .env
 python manage.py migrate
 
 # Limpiar y sembrar datos iniciales (Exchanges, Billeteras y balances a 5 BTC / 100k USDT)
-# NOTA: Ejecuta este script siempre que desees reiniciar la DB a su estado original limpio.
+# NOTA: Ejecuta este script al inicio (Contiene un seed inicial) y siempre que desees reiniciar la DB a su estado original limpio.
 python clean_db.py
 
 # Iniciar el servidor de desarrollo (API y WebSockets auto-iniciados)
