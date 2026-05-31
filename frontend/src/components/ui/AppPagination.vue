@@ -49,7 +49,7 @@ const endItem = computed(() => {
     
     <div class="pagination-controls">
       <AppButton 
-        variant="secondary" 
+        variant="ghost" 
         :disabled="isFirstPage" 
         @click="prevPage"
       >
@@ -57,10 +57,10 @@ const endItem = computed(() => {
         Anterior
       </AppButton>
       
-      <span class="page-indicator">Página {{ currentPage }} de {{ totalPages }}</span>
+      <span class="page-indicator text-muted">Página {{ currentPage }} de {{ totalPages }}</span>
       
       <AppButton 
-        variant="secondary" 
+        variant="ghost" 
         :disabled="isLastPage" 
         @click="nextPage"
       >
@@ -77,10 +77,8 @@ const endItem = computed(() => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-bg-card-soft);
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: transparent;
 }
 
 .pagination-info {
