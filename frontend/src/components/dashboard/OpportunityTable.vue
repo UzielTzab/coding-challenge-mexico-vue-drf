@@ -42,8 +42,8 @@ onMounted(async () => {
         <TransitionGroup name="list" tag="tbody" v-if="opportunities.length > 0">
           <tr v-for="opp in opportunities" :key="opp.id">
             <td>{{ opp.symbol || opp.pair || 'BTC/USDT' }}</td>
-            <td style="text-transform: capitalize;">{{ opp.buy_exchange }}</td>
-            <td style="text-transform: capitalize;">{{ opp.sell_exchange }}</td>
+            <td style="text-transform: capitalize;">{{ opp.buy_exchange_name || opp.buy_exchange }}</td>
+            <td style="text-transform: capitalize;">{{ opp.sell_exchange_name || opp.sell_exchange }}</td>
             <td :class="(opp.gross_spread_percent || 0) >= 0 ? 'text-success' : 'text-danger'">
               {{ formatPercent(opp.gross_spread_percent || 0) }}
             </td>

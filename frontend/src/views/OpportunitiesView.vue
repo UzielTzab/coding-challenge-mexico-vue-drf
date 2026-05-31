@@ -23,8 +23,8 @@ const currentFilters = ref({});
 
 const columns = [
   { key: 'id', label: 'ID' },
-  { key: 'buy_exchange', label: 'Comprar' },
-  { key: 'sell_exchange', label: 'Vender' },
+  { key: 'buy_exchange_name', label: 'Comprar' },
+  { key: 'sell_exchange_name', label: 'Vender' },
   { key: 'profit_usd', label: 'Ganancia USD', align: 'right' as const },
   { key: 'profit_percent', label: 'Ganancia %', align: 'right' as const },
   { key: 'status', label: 'Estado', align: 'center' as const },
@@ -82,16 +82,16 @@ onMounted(() => {
           <span class="text-muted text-xs">#{{ item.id?.toString().substring(0, 8) }}</span>
         </template>
         <template #cell-profit_usd="{ item }">
-          <span class="numeric text-success">+{{ formatUSD(item.profit_usd) }}</span>
+          <span class="numeric text-success">+{{ formatUSD(item.net_profit || 0) }}</span>
         </template>
         <template #cell-profit_percent="{ item }">
-          <span class="numeric text-success">{{ formatPercent(item.profit_percent) }}</span>
+          <span class="numeric text-success">{{ formatPercent(item.net_profit_percent || 0) }}</span>
         </template>
         <template #cell-status="{ item }">
           <OpportunityStatusBadge :status="item.status || 'detected'" />
         </template>
         <template #cell-timestamp="{ item }">
-          <span class="text-muted">{{ new Date(item.timestamp).toLocaleString() }}</span>
+          <span class="text-muted">{{ new Date(item.detected_at || item.timestamp).toLocaleString() }}</span>
         </template>
       </AppTable>
       <AppPagination 
