@@ -6,6 +6,7 @@ import OpportunityStatusDonut from '../components/performance/OpportunityStatusD
 import api from '../services/http'; // Para el endpoint de analytics
 import { useFormatters } from '../composables/useFormatters';
 import AppSkeleton from '../components/ui/AppSkeleton.vue';
+import AppButton from '../components/ui/AppButton.vue';
 
 const { formatUSD } = useFormatters();
 
@@ -74,8 +75,16 @@ onMounted(() => {
 <template>
   <div class="view-container">
     <div class="view-header">
-      <h2>Rendimiento y Analíticas</h2>
-      <p class="text-muted">Métricas de rentabilidad histórica y eficacia del motor.</p>
+      <div class="header-content">
+        <div>
+          <h2>Rendimiento y Analíticas</h2>
+          <p class="text-muted">Métricas de rentabilidad histórica y eficacia del motor.</p>
+        </div>
+        <AppButton variant="secondary" @click="loadAnalytics" :disabled="isLoading">
+          <span class="material-symbols-outlined" :class="{ 'spin': isLoading }">refresh</span>
+          Actualizar
+        </AppButton>
+      </div>
     </div>
     
     <div v-if="isLoading" class="dashboard-grid">
@@ -128,8 +137,22 @@ onMounted(() => {
   flex-direction: column;
   gap: 24px;
 }
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 .view-header h2 { margin: 0 0 8px 0; }
 .view-header p { margin: 0; }
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
 .dashboard-grid {
   display: flex;
