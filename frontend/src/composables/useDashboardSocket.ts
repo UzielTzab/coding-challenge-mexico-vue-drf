@@ -57,7 +57,14 @@ export const useDashboardSocket = () => {
             // walletsStore.update(data);
             break;
           case 'bot_status_changed':
-            // log/performance store update
+            oppStore.setSummary({
+              global_win_rate: parseFloat(data.win_rate_percent) || 0,
+              trades_count: data.total_trades || 0,
+              discarded_opportunities: data.discarded_opportunities || 0,
+              opportunities_count: (data.total_trades || 0) + (data.discarded_opportunities || 0),
+              average_cost: parseFloat(data.total_fees_usd) || 0
+            });
+            oppStore.updateGlobalPnl(parseFloat(data.total_pnl_usd) || 0);
             break;
         }
       };
