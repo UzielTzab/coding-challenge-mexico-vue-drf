@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppEmptyState from './AppEmptyState.vue';
+import AppSkeleton from './AppSkeleton.vue';
 
 interface Props {
   columns: Array<{ key: string; label: string; align?: 'left' | 'center' | 'right' }>;
@@ -12,7 +13,7 @@ defineProps<Props>();
 
 <template>
   <div class="app-table-container">
-    <table v-if="data.length > 0 && !loading" class="app-table">
+    <table v-if="data.length > 0 || loading" class="app-table">
       <thead>
         <tr>
           <th 
@@ -24,24 +25,27 @@ defineProps<Props>();
           </th>
         </tr>
       </thead>
-      <tbody>
+      <tbody v-if="!loading">
         <tr v-for="(row, index) in data" :key="index">
           <td 
             v-for="col in columns" 
             :key="col.key"
             :style="{ textAlign: col.align || 'left' }"
           >
-            <slot :name="col.key" :item="row">
+            <slot :name="'cell-' + col.key" :item="row">
               {{ row[col.key] }}
             </slot>
           </td>
         </tr>
       </tbody>
+      <tbody v-else>
+        <tr v-for="i in 5" :key="i">
+          <td v-for="col in columns" :key="col.key">
+            <AppSkeleton height="16px" width="70%" borderRadius="4px" />
+          </td>
+        </tr>
+      </tbody>
     </table>
-    
-    <div v-if="loading" class="table-loading">
-      <p class="text-muted">Cargando datos...</p>
-    </div>
     
     <AppEmptyState v-if="!loading && data.length === 0" message="No hay datos disponibles" />
   </div>
