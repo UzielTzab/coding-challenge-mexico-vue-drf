@@ -69,6 +69,10 @@ cd coding-challenge-mexico-vue-drf
 ```
 
 ### 2. Configuración del Backend (Django)
+
+> [!NOTE]
+> **Base de Datos:** El proyecto está configurado para conectarse a Postgres (Neon) en producción usando la variable `NEON_DB_CONNECTION_STRING`. Sin embargo, para facilitar las pruebas locales y la evaluación, si esta variable no se proporciona o no existe el archivo `.env`, el sistema hará un fallback inteligente y utilizará automáticamente **SQLite local** (cero configuración externa requerida).
+
 ```bash
 cd backend
 python -m venv venv
