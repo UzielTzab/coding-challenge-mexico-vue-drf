@@ -15,7 +15,7 @@ Este proyecto fue desarrollado como solución al **Hackathon Challenge**, cumpli
 3. **Cálculo de Costos Reales:** El motor no se engaña con márgenes brutos. Cada operación deduce automáticamente comisiones (*Trading Fees* variables por exchange), costos de retiro (*Withdrawal Fees*), y márgenes de seguridad por *Slippage*.
 4. **Restricciones de Liquidez:** El sistema nunca opera por encima de la liquidez real. Ajusta el volumen dinámicamente basándose en la profundidad real del Order Book (`bid_volume` y `ask_volume`).
 5. **Gestión de Wallets:** Tras cada operación simulada, el balance local de USDT y BTC de las billeteras virtuales se descuenta e incrementa con total integridad transaccional.
-6. **Dashboard de Grado Institucional:** Interfaz web premium con KPIs dinámicos, historial detallado de operaciones, monitoreo de PnL y visualización de oportunidades descartadas vs ejecutadas en tiempo real.
+6. **Dashboard de Grado Institucional:** Interfaz web con KPIs dinámicos, historial detallado de operaciones, monitoreo de PnL y visualización de oportunidades descartadas vs ejecutadas en tiempo real.
 
 ---
 
@@ -31,7 +31,7 @@ Este proyecto fue desarrollado como solución al **Hackathon Challenge**, cumpli
 ### Frontend
 - **Framework:** Vue 3 (Composition API) + Vite
 - **Lenguaje:** TypeScript
-- **Estilos:** CSS3 Nativo (Variables CSS, Flexbox/Grid, Tematización Oscura Premium)
+- **Estilos:** CSS3 Nativo (Variables CSS, Flexbox/Grid, Tematización Oscura)
 - **Estado Global:** Pinia
 - **Comunicación:** Axios (REST) + WebSockets API nativa.
 
@@ -58,9 +58,9 @@ Este proyecto fue desarrollado como solución al **Hackathon Challenge**, cumpli
 ## Instalación y Desarrollo Local
 
 ### Prerrequisitos
-- Python 3.10+
+- Python 3.10+ (Si no lo tienes, descárgalo de [python.org](https://www.python.org/downloads/) o instálalo vía `sudo apt install python3` en Linux).
 - Node.js 18+
-- Servidor Redis corriendo localmente (Puerto 6379) o URL de Redis Cloud.
+- Servidor Redis corriendo localmente (Puerto 6379) o URL de Redis Cloud **(Opcional, solo requerido para entornos de Producción)**. En desarrollo local, Django utiliza la memoria RAM (`InMemoryChannelLayer`).
 
 ### 1. Clonar el repositorio
 ```bash
