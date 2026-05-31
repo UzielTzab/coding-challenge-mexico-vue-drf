@@ -84,11 +84,11 @@ const formatPriceCompact = (val: number) => {
       <div class="ex-prices">
         <div class="price-col">
           <span class="label">BID</span>
-          <span class="value"><AnimatedNumber :value="marketData.bid" :format="formatPriceCompact" /></span>
+          <span class="value value-bid"><AnimatedNumber :value="marketData.bid" :format="formatPriceCompact" /></span>
         </div>
         <div class="price-col right">
           <span class="label">ASK</span>
-          <span class="value"><AnimatedNumber :value="marketData.ask" :format="formatPriceCompact" /></span>
+          <span class="value value-ask"><AnimatedNumber :value="marketData.ask" :format="formatPriceCompact" /></span>
         </div>
       </div>
       
@@ -216,6 +216,14 @@ const formatPriceCompact = (val: number) => {
   color: var(--color-text-primary);
   font-family: 'Inter', monospace;
   letter-spacing: -0.5px;
+}
+
+.price-col .value.value-bid {
+  color: var(--color-success);
+}
+
+.price-col .value.value-ask {
+  color: var(--color-danger);
 }
 
 .ex-meta {
