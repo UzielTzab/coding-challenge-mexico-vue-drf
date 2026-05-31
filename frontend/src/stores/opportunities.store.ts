@@ -7,8 +7,25 @@ export const useOpportunitiesStore = defineStore('opportunities', () => {
   const totalPnl = ref(0);
   const pnlHistory = ref<{date: string, value: number}[]>([]);
   
+  const summary = ref({
+    global_win_rate: 0,
+    trades_count: 0,
+    discarded_opportunities: 0,
+    opportunities_count: 0,
+    average_cost: 0
+  });
+
   const prepend = (opp: Opportunity) => {
     items.value.unshift(opp);
+    
+    // Update real-time counts
+    summary.value.opportunities_count++;
+    if (opp.status === 'executed' || opp.status === 'profitable') {
+      summary.value.trades_count++;
+    } else if (opp.status === 'discarded') {
+      summary.value.discarded_opportunities++;
+    }
+
     if (opp.status === 'profitable' && opp.net_profit) {
       const profitValue = typeof opp.net_profit === 'string' ? parseFloat(opp.net_profit) : opp.net_profit;
       totalPnl.value += profitValue;
@@ -36,5 +53,9 @@ export const useOpportunitiesStore = defineStore('opportunities', () => {
     }
   };
 
-  return { items, prepend, totalPnl, pnlHistory, setInitialPnl };
+  const setSummary = (s: any) => {
+    summary.value = { ...summary.value, ...s };
+  };
+
+  return { items, prepend, totalPnl, pnlHistory, setInitialPnl, summary, setSummary };
 });

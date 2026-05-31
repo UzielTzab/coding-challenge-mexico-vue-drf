@@ -9,12 +9,16 @@ interface Props {
   prefix?: string;
   suffix?: string;
   subtextHtml?: string;
+  decimals?: string | number;
 }
 
 defineProps<Props>();
 
-const formatNumber = (val: number) => {
-  return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const formatNumber = (val: number, props: Props) => {
+  return val.toLocaleString('en-US', { 
+    minimumFractionDigits: props?.decimals !== undefined ? Number(props.decimals) : 2, 
+    maximumFractionDigits: props?.decimals !== undefined ? Number(props.decimals) : 2 
+  });
 };
 </script>
 
@@ -23,7 +27,7 @@ const formatNumber = (val: number) => {
     <div class="kpi-label uppercase-label">{{ title }}</div>
     <div class="kpi-value-row">
       <span class="kpi-value numeric">
-        {{ prefix }}<AnimatedNumber v-if="typeof value === 'number'" :value="value" :format="formatNumber" /><template v-else>{{ value }}</template>{{ suffix }}
+        {{ prefix }}<AnimatedNumber v-if="typeof value === 'number'" :value="value" :format="(v) => formatNumber(v, $props)" /><template v-else>{{ value }}</template>{{ suffix }}
       </span>
       <span v-if="variation" class="kpi-variation" :class="variation > 0 ? 'text-success' : 'text-danger'">
         {{ variation > 0 ? '▲' : '▼' }} {{ Math.abs(variation) }}%

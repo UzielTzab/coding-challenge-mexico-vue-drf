@@ -14,13 +14,6 @@ const { connect } = useDashboardSocket();
 const marketStore = useMarketStore();
 const oppStore = useOpportunitiesStore();
 const isLoading = ref(true);
-const summary = ref({
-  global_win_rate: 0,
-  trades_count: 0,
-  discarded_opportunities: 0,
-  opportunities_count: 0,
-  average_cost: 0
-});
 
 const averageBtcPrice = computed(() => {
   const snaps = Object.values(marketStore.snapshots);
@@ -37,13 +30,13 @@ onMounted(async () => {
     if (Array.isArray(result) && result.length > 0) result = result[0];
     
     if (result) {
-      summary.value = {
+      oppStore.setSummary({
         global_win_rate: parseFloat(result.win_rate_percent) || 0,
         trades_count: result.total_trades || 0,
         discarded_opportunities: result.discarded_opportunities || 0,
         opportunities_count: (result.total_trades || 0) + (result.discarded_opportunities || 0),
         average_cost: parseFloat(result.total_fees_usd) || 0
-      };
+      });
       oppStore.setInitialPnl(parseFloat(result.total_pnl_usd) || 0);
     }
   } catch (error) {
@@ -91,15 +84,16 @@ onMounted(async () => {
     <template v-else>
       <!-- Fila 1: KPIs (6 cards x 2 columnas = 12 cols) -->
       <KpiCard class="col-span-2" title="P&L Total" :value="oppStore.totalPnl" prefix="$" />
-      <KpiCard class="col-span-2" title="Win Rate" :value="summary.global_win_rate" suffix="%" />
-      <KpiCard class="col-span-2" title="Ops Ejecutadas" :value="summary.trades_count" />
+      <KpiCard class="col-span-2" title="Win Rate" :value="oppStore.summary.global_win_rate" suffix="%" />
+      <KpiCard class="col-span-2" title="Ops Ejecutadas" :value="oppStore.summary.trades_count" decimals="0" />
       <KpiCard 
         class="col-span-2" 
         title="Oportunidades" 
-        :value="summary.opportunities_count" 
-        :subtextHtml="`<span><span class='success'>🟢 ${summary.trades_count} ejecutadas</span> &nbsp;|&nbsp; <span class='danger'>🔴 ${summary.discarded_opportunities} descartadas</span></span>`"
+        :value="oppStore.summary.opportunities_count" 
+        decimals="0"
+        :subtextHtml="`<span><span class='success'>🟢 ${oppStore.summary.trades_count} ejecutadas</span> &nbsp;|&nbsp; <span class='danger'>🔴 ${oppStore.summary.discarded_opportunities} descartadas</span></span>`"
       />
-      <KpiCard class="col-span-2" title="Costo Promedio" :value="summary.average_cost" prefix="$" />
+      <KpiCard class="col-span-2" title="Costo Promedio" :value="oppStore.summary.average_cost" prefix="$" />
       <KpiCard class="col-span-2" title="Precio Promedio BTC" :value="averageBtcPrice" prefix="$" />
 
       <!-- Fila 2: Exchanges (3 cards x 4 columnas = 12 cols) -->
