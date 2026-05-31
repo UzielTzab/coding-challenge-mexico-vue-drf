@@ -1,14 +1,9 @@
 <script setup lang="ts">
 import AppCard from '../ui/AppCard.vue';
-import { useFormatters } from '../../composables/useFormatters';
-
 const props = defineProps<{
   exchange: string;
   balances: Record<string, number>;
-  totalUsdValue: number;
 }>();
-
-const { formatUSD } = useFormatters();
 </script>
 
 <template>
@@ -17,10 +12,6 @@ const { formatUSD } = useFormatters();
       <div class="exchange-title">
         <span class="material-symbols-outlined icon">account_balance_wallet</span>
         <h3>{{ exchange }}</h3>
-      </div>
-      <div class="total-value">
-        <span class="uppercase-label">Valor Total Estimado</span>
-        <div class="numeric value">{{ formatUSD(totalUsdValue) }}</div>
       </div>
     </div>
     
@@ -66,19 +57,6 @@ const { formatUSD } = useFormatters();
 
 .icon {
   color: var(--color-primary-light);
-}
-
-.total-value {
-  text-align: right;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.value {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--color-text-primary);
 }
 
 .balances-list {

@@ -52,7 +52,6 @@ onMounted(() => {
         :key="w.exchange" 
         :exchange="w.exchange"
         :balances="w.balances"
-        :totalUsdValue="w.totalUsdValue"
       />
     </div>
 
