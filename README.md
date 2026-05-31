@@ -81,12 +81,12 @@ cp .env.example .env
 # Ejecutar migraciones
 python manage.py migrate
 
-# Cargar datos semilla (Exchanges y Fees)
-python manage.py loaddata apps/exchanges/fixtures/initial_exchanges.json
+# Limpiar y sembrar datos iniciales (Exchanges, Billeteras y balances a 5 BTC / 100k USDT)
+# NOTA: Ejecuta este script siempre que desees reiniciar la DB a su estado original limpio.
+python clean_db.py
 
-# Iniciar servidor ASGI
-daphne -p 8000 config.asgi:application
-# o en desarrollo clásico: python manage.py runserver
+# Iniciar el servidor de desarrollo (API y WebSockets auto-iniciados)
+python manage.py runserver
 ```
 
 ### 3. Configuración del Frontend (Vue 3)
