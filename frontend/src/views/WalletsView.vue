@@ -3,21 +3,30 @@ import { ref, onMounted } from 'vue';
 import AppCard from '../components/ui/AppCard.vue';
 import WalletCard from '../components/wallets/WalletCard.vue';
 import WalletMovementTable from '../components/wallets/WalletMovementTable.vue';
-import { getWallets } from '../services/wallets.service';
+import { getWallets, getWalletMovements } from '../services/wallets.service';
 import AppButton from '../components/ui/AppButton.vue';
+import AppPagination from '../components/ui/AppPagination.vue';
+import AppSkeleton from '../components/ui/AppSkeleton.vue';
 
 const isLoading = ref(false);
 
 const wallets = ref<any[]>([]);
 const movements = ref<any[]>([]);
 
+const currentPage = ref(1);
+const totalRecords = ref(0);
+
 const loadData = async () => {
   isLoading.value = true;
   try {
-    const data = await getWallets();
-    const results = data.results || data;
+    const [walletsData, movementsData] = await Promise.all([
+      getWallets(),
+      getWalletMovements({ page: currentPage.value })
+    ]);
     
-    wallets.value = results.map((w: any) => ({
+    const wResults = walletsData.results || walletsData;
+    
+    wallets.value = wResults.map((w: any) => ({
       exchange: w.exchange_name || w.exchange,
       balances: {
         'BTC': parseFloat(w.btc_available || '0'),
@@ -26,13 +35,18 @@ const loadData = async () => {
       totalUsdValue: parseFloat(w.total_value_usd || '0')
     }));
     
-    // Movements endpoint not yet implemented in backend API, leaving empty
-    movements.value = [];
+    totalRecords.value = movementsData.count || 0;
+    movements.value = movementsData.results || movementsData;
   } catch (error) {
     console.error('Error fetching wallets:', error);
   } finally {
     isLoading.value = false;
   }
+};
+
+const handlePageChange = (page: number) => {
+  currentPage.value = page;
+  loadData();
 };
 
 onMounted(() => {
@@ -55,12 +69,16 @@ onMounted(() => {
       </div>
     </div>
     
-    <div class="wallets-grid">
+    <div class="wallets-grid" v-if="isLoading && wallets.length === 0">
+      <AppSkeleton v-for="i in 3" :key="i" height="200px" borderRadius="12px" />
+    </div>
+    <div class="wallets-grid" v-else>
       <WalletCard 
         v-for="w in wallets" 
         :key="w.exchange" 
         :exchange="w.exchange"
         :balances="w.balances"
+        :totalUsdValue="w.totalUsdValue"
       />
     </div>
 
@@ -68,6 +86,12 @@ onMounted(() => {
       <h3>Historial de Movimientos</h3>
       <AppCard>
         <WalletMovementTable :movements="movements" :isLoading="isLoading" />
+        <AppPagination 
+          v-if="totalRecords > 0"
+          :current-page="currentPage" 
+          :total-items="totalRecords" 
+          @page-change="handlePageChange" 
+        />
       </AppCard>
     </div>
   </div>

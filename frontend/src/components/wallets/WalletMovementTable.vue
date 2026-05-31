@@ -27,21 +27,23 @@ const columns = [
       :loading="isLoading"
     >
       <template #cell-timestamp="{ item }">
-        <span class="text-muted">{{ formatDate(item.timestamp) }}</span>
+        <span class="text-muted">{{ formatDate(item.created_at || item.timestamp) }}</span>
       </template>
       <template #cell-exchange="{ item }">
-        <span style="text-transform: capitalize;">{{ item.exchange }}</span>
+        <span style="text-transform: capitalize;">{{ item.wallet_exchange || item.exchange }}</span>
       </template>
       <template #cell-type="{ item }">
-        <span :class="item.type === 'deposit' ? 'text-success' : 'text-danger'">
-          {{ item.type === 'deposit' ? 'Depósito' : 'Retiro' }}
+        <span :class="parseFloat(item.amount) > 0 ? 'text-success' : 'text-danger'">
+          {{ item.movement_type || item.type }}
         </span>
       </template>
       <template #cell-amount="{ item }">
-        <span class="numeric">{{ item.type === 'deposit' ? '+' : '-' }}{{ item.amount }} {{ item.asset }}</span>
+        <span class="numeric" :class="parseFloat(item.amount) > 0 ? 'text-success' : 'text-danger'">
+          {{ parseFloat(item.amount) > 0 ? '+' : '' }}{{ parseFloat(item.amount).toFixed(8) }} {{ item.asset }}
+        </span>
       </template>
       <template #cell-status="{ item }">
-        <span class="text-muted">{{ item.status || 'Completado' }}</span>
+        <span class="text-muted">Completado</span>
       </template>
     </AppTable>
   </div>
