@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue';
 import MetricCard from '../components/performance/MetricCard.vue';
 import PnlLineChart from '../components/performance/PnlLineChart.vue';
-import ProfitByPairBarChart from '../components/performance/ProfitByPairBarChart.vue';
 import OpportunityStatusDonut from '../components/performance/OpportunityStatusDonut.vue';
 import api from '../services/http'; // Para el endpoint de analytics
 import { useFormatters } from '../composables/useFormatters';
@@ -17,7 +16,6 @@ interface Analytics {
   global_win_rate: number;
   trades_count: number;
   pnl_history: any[];
-  profit_by_pair: any[];
   status_stats: { executed: number; failed: number; discarded: number; };
 }
 
@@ -26,41 +24,43 @@ const analytics = ref<Analytics>({
   global_win_rate: 0,
   trades_count: 0,
   pnl_history: [],
-  profit_by_pair: [],
   status_stats: { executed: 0, failed: 0, discarded: 0 }
 });
 
 const loadAnalytics = async () => {
   try {
     const { data } = await api.get('/api/analytics/performance/');
-    let result = data.results ? data.results : data;
-    if (Array.isArray(result) && result.length > 0) result = result[0];
+    let results = data.results ? data.results : data;
+    if (!Array.isArray(results)) {
+      results = [results];
+    }
     
-    if (result) {
+    if (results.length > 0) {
+      const latest = results[0];
+      
+      // Construir historial de PnL (viene ordenado descendente, lo invertimos)
+      const history = [...results].reverse().map((snap: any) => {
+        const d = new Date(snap.created_at);
+        return {
+          date: `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`,
+          value: parseFloat(snap.total_pnl_usd) || 0
+        };
+      });
+
       analytics.value = {
-        global_pnl: parseFloat(result.total_pnl_usd) || 0,
-        global_win_rate: parseFloat(result.win_rate_percent) || 0,
-        trades_count: result.total_trades || 0,
-        pnl_history: [], // TODO: backend needs to provide this
-        profit_by_pair: [], // TODO: backend needs to provide this
+        global_pnl: parseFloat(latest.total_pnl_usd) || 0,
+        global_win_rate: parseFloat(latest.win_rate_percent) || 0,
+        trades_count: latest.total_trades || 0,
+        pnl_history: history,
         status_stats: { 
-          executed: result.total_trades || 0, 
-          failed: result.failed_trades || 0, 
-          discarded: result.discarded_opportunities || 0 
+          executed: latest.total_trades || 0, 
+          failed: latest.failed_trades || 0, 
+          discarded: latest.discarded_opportunities || 0 
         }
       };
     }
   } catch (error) {
     console.error('Error fetching performance:', error);
-    // Mock temporal para visualización si falla
-    analytics.value = {
-      global_pnl: 1540.50,
-      global_win_rate: 85,
-      trades_count: 142,
-      pnl_history: [],
-      profit_by_pair: [{ pair: 'BTC/USD', profit: 1200 }, { pair: 'ETH/USD', profit: 340.5 }],
-      status_stats: { executed: 120, failed: 12, discarded: 10 }
-    };
   } finally {
     isLoading.value = false;
   }
@@ -85,9 +85,6 @@ onMounted(() => {
       <div class="charts-main">
         <div class="main-chart"><AppSkeleton height="350px" borderRadius="12px" /></div>
         <div class="side-chart"><AppSkeleton height="350px" borderRadius="12px" /></div>
-      </div>
-      <div class="charts-bottom">
-        <div class="half-chart"><AppSkeleton height="300px" borderRadius="12px" /></div>
       </div>
     </div>
     
@@ -122,11 +119,6 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Charts Row 2 -->
-      <div class="charts-bottom">
-        <div class="half-chart">
-          <ProfitByPairBarChart :data="analytics.profit_by_pair" />
-        </div>
       </div>
     </div>
   </div>
@@ -158,11 +150,5 @@ onMounted(() => {
   grid-template-columns: 2fr 1fr;
   gap: 24px;
   min-height: 300px;
-}
-
-.charts-bottom {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
 }
 </style>
