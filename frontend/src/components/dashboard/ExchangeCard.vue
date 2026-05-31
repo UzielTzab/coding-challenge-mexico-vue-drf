@@ -214,7 +214,7 @@ const formatPriceCompact = (val: number) => {
   font-size: 26px;
   font-weight: 500;
   color: var(--color-text-primary);
-  font-family: 'Inter', monospace;
+  font-family: "JetBrains Mono", "IBM Plex Mono", Consolas, monospace;
   letter-spacing: -0.5px;
 }
 
@@ -249,7 +249,7 @@ const formatPriceCompact = (val: number) => {
 }
 
 .depth-price {
-  font-family: 'Inter', monospace;
+  font-family: "JetBrains Mono", "IBM Plex Mono", Consolas, monospace;
   font-size: 13px;
   color: var(--color-text-muted);
   width: 70px;
