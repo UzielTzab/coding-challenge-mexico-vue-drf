@@ -5,6 +5,7 @@ import AppTable from '../components/ui/AppTable.vue';
 import OpportunityFilters from '../components/opportunities/OpportunityFilters.vue';
 import OpportunityDetailDrawer from '../components/opportunities/OpportunityDetailDrawer.vue';
 import OpportunityStatusBadge from '../components/opportunities/OpportunityStatusBadge.vue';
+import AppPagination from '../components/ui/AppPagination.vue';
 import { useOpportunitiesStore } from '../stores/opportunities.store';
 import { getOpportunities } from '../services/opportunities.service';
 import { useFormatters } from '../composables/useFormatters';
@@ -15,6 +16,10 @@ const { formatUSD, formatPercent } = useFormatters();
 const isLoading = ref(false);
 const isDrawerOpen = ref(false);
 const selectedOpportunity = ref<any>(null);
+
+const currentPage = ref(1);
+const totalRecords = ref(0);
+const currentFilters = ref({});
 
 const columns = [
   { key: 'id', label: 'ID' },
@@ -31,10 +36,9 @@ const data = computed(() => store.items);
 const loadData = async (filters = {}) => {
   isLoading.value = true;
   try {
-    const result = await getOpportunities(filters);
-    // Asumiendo que el backend retorna un arreglo o { results: [...] }
-    const items = result.results || result;
-    store.items = items;
+    const result = await getOpportunities({ ...filters, page: currentPage.value });
+    totalRecords.value = result.count || 0;
+    store.items = result.results || result;
   } catch (error) {
     console.error('Error fetching opportunities:', error);
   } finally {
@@ -43,7 +47,14 @@ const loadData = async (filters = {}) => {
 };
 
 const handleFilter = (filters: any) => {
+  currentFilters.value = filters;
+  currentPage.value = 1;
   loadData(filters);
+};
+
+const handlePageChange = (page: number) => {
+  currentPage.value = page;
+  loadData(currentFilters.value);
 };
 
 const openDetail = (row: any) => {
@@ -83,6 +94,12 @@ onMounted(() => {
           <span class="text-muted">{{ new Date(item.timestamp).toLocaleString() }}</span>
         </template>
       </AppTable>
+      <AppPagination 
+        v-if="totalRecords > 0"
+        :current-page="currentPage" 
+        :total-items="totalRecords" 
+        @page-change="handlePageChange" 
+      />
     </AppCard>
 
     <OpportunityDetailDrawer 
