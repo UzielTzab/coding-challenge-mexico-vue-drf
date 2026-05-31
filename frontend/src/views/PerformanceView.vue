@@ -118,8 +118,6 @@ onMounted(() => {
           <OpportunityStatusDonut :stats="analytics.status_stats" />
         </div>
       </div>
-
-      </div>
     </div>
   </div>
 </template>
