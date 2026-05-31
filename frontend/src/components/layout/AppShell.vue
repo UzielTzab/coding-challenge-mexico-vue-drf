@@ -19,7 +19,7 @@ import AppHeader from './AppHeader.vue';
 .app-shell {
   height: 100vh;
   display: grid;
-  grid-template-columns: var(--sidebar-width, 240px) 1fr;
+  grid-template-columns: 200px 1fr;
   background: var(--color-bg-base);
 }
 

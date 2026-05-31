@@ -49,7 +49,7 @@ const links = [
 
 <style scoped>
 .sidebar {
-  width: 240px;
+  width: 100%;
   background: var(--color-bg-base);
   border-right: 1px solid var(--color-border);
   display: flex;
