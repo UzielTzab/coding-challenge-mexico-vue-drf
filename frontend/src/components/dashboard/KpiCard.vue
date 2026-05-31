@@ -56,6 +56,7 @@ const formatNumber = (val: number, props: Props) => {
   font-weight: 500;
   color: var(--color-text-primary);
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 .kpi-variation {
   font-size: 13px;
